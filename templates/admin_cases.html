@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Cases</h2>
+      {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+      {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+      <div class="card mb-4">
+        <div class="card-header"><h4>New Case</h4></div>
+        <div class="card-body">
+          <form method="post" id="case-form">
+            <input type="hidden" name="action" value="create">
+            <div class="mb-3">
+              <label class="form-label">Template</label>
+              <select class="form-select" name="template" id="template-select" required>
+                <option value="">Select template</option>
+                {% for t in templates %}
+                <option value="{{ t.name }}">{{ t.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div id="case-fields"></div>
+            <button type="submit" class="btn btn-primary">Submit Case</button>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h4>Existing Cases</h4></div>
+        <div class="card-body">
+          {% if cases %}
+          <table class="table table-striped">
+            <thead><tr><th>ID</th><th>Template</th><th>Creator</th><th>Created</th></tr></thead>
+            <tbody>
+            {% for c in cases %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ c.template }}</td>
+                <td>{{ c.created_by }}</td>
+                <td>{{ c.created_at[:19] }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="alert alert-info">No cases found.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const templates = {{ templates|tojson }};
+const select = document.getElementById('template-select');
+const fieldsDiv = document.getElementById('case-fields');
+function renderFields() {
+  fieldsDiv.innerHTML = '';
+  const t = templates.find(x => x.name === select.value);
+  if(!t) return;
+  t.fields.forEach(f => {
+    let html = '';
+    if(f.type === 'checkbox') {
+      html = `<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="${f.name}"><label class="form-check-label">${f.name}</label></div>`;
+    } else if(f.type === 'dropdown') {
+      let opts = (f.options||[]).map(o=>`<option value="${o}">${o}</option>`).join('');
+      html = `<div class="mb-3"><label class="form-label">${f.name}</label><select class="form-select" name="${f.name}">${opts}</select></div>`;
+    } else {
+      html = `<div class="mb-3"><label class="form-label">${f.name}</label><input type="text" class="form-control" name="${f.name}"></div>`;
+    }
+    fieldsDiv.insertAdjacentHTML('beforeend', html);
+  });
+}
+select.addEventListener('change', renderFields);
+</script>
+{% endblock %}
