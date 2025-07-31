@@ -1,0 +1,80 @@
+*** Begin Patch
+*** Update File: app.py
+@@
+-@app.route('/api/data-tables/ /columns')
+-def api_get_table_columns(table_name):
++@app.route('/api/data-tables/<table_name>/columns')
++def api_get_table_columns(table_name):
+@@
+-@app.route('/api/data-tables/ /related-data', methods=['POST'])
+-def api_get_related_table_data(table_name):
++@app.route('/api/data-tables/<table_name>/related-data', methods=['POST'])
++def api_get_related_table_data(table_name):
+@@
+-@app.route('/api/data-tables/ /data')
+-def api_get_table_data(table_name):
++@app.route('/api/data-tables/<table_name>/data')
++def api_get_table_data(table_name):
+*** End Patch
+
+*** Begin Patch
+*** Update File: static/js/template-editor.js
+@@ function loadAvailableDataTables() {
+-                availableDataTables = data.tables;
+-                updateAllTableSelects();
++                availableDataTables = data.tables;
++                updateAllTableSelects();
++                // Pre-select existing data source values before initializing data sources.
++                setExistingDataSourceValues();
+@@
+         })
+         .catch(error => console.error('Error loading data tables:', error));
+ }
++
++// Pre-populate table and column selections for existing fields based on allFields data.
++function setExistingDataSourceValues() {
++    if (!Array.isArray(allFields)) return;
++    allFields.forEach(function(field, index) {
++        if (field.data_source && field.data_source.type === 'custom_table') {
++            // Set table select
++            const tableSelect = document.querySelector(`select[name="field_${index}_table"]`);
++            if (tableSelect && field.data_source.table_name) {
++                tableSelect.value = field.data_source.table_name;
++            }
++            // Save default value/label columns on the select elements so updateColumnSelects can restore them
++            const valueSelect = document.querySelector(`select[name="field_${index}_value_column"]`);
++            if (valueSelect && field.data_source.value_column) {
++                valueSelect.dataset.defaultValue = field.data_source.value_column;
++            }
++            const labelSelect = document.querySelector(`select[name="field_${index}_label_column"]`);
++            if (labelSelect && field.data_source.label_column) {
++                labelSelect.dataset.defaultValue = field.data_source.label_column;
++            }
++            const textColumnSelect = document.querySelector(`select[name="field_${index}_text_column"]`);
++            if (textColumnSelect && field.data_source.text_column) {
++                textColumnSelect.dataset.defaultValue = field.data_source.text_column;
++            }
++        }
++    });
++}
+@@ function updateColumnSelects(fieldIndex, columns) {
+     // Add column options
+     columns.forEach(column => {
+@@
+     // Show the column configuration
+     const tableColumns = document.getElementById(`field_${fieldIndex}_table_columns`);
+     if (tableColumns) {
+         tableColumns.style.display = 'block';
+     }
++
++    // Restore default selections saved in dataset.defaultValue
++    if (valueSelect && valueSelect.dataset.defaultValue) {
++        valueSelect.value = valueSelect.dataset.defaultValue;
++    }
++    if (labelSelect && labelSelect.dataset.defaultValue) {
++        labelSelect.value = labelSelect.dataset.defaultValue;
++    }
++    if (textColumnSelect && textColumnSelect.dataset.defaultValue) {
++        textColumnSelect.value = textColumnSelect.dataset.defaultValue;
++    }
+*** End Patch

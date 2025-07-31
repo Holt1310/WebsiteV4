@@ -1,0 +1,10 @@
+{
+  "server_tools": [],
+  "settings": {
+    "allow_custom_tools": true,
+    "allow_user_tools": true,
+    "require_admin_approval": false,
+    "log_tool_usage": true,
+    "max_user_tools": 10
+  }
+}

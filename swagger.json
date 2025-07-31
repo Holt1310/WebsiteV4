@@ -1,0 +1,5220 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OnTrak Enterprise API",
+    "description": "OnTrak Enterprise",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/Authenticate/login": {
+      "post": {
+        "tags": [
+          "Authenticate"
+        ],
+        "summary": "Login to obtain a token for use with the APIs.",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The login model.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the Jwt token with the expiration date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResultModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the login model was not valid or was null."
+          },
+          "401": {
+            "description": "If provided credentials were not accepted."
+          }
+        }
+      }
+    },
+    "/api/Charge/{id}": {
+      "delete": {
+        "tags": [
+          "Charge"
+        ],
+        "summary": "Delete a charge entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The charge identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the delete charge.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Charge"
+        ],
+        "summary": "Returns a Charge. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The charge identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the charge.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Charge"
+        ],
+        "summary": "Update an existing charge using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "description": "Sample request: PUT /Charge { \"Id\": 1, \"ChargeName\": \"Charge1\",\r\n\"ChargeRate\": 15.6, \"ChargeType\": 2 }",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the charge model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A ChargeModel containing the charge data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the ChargeModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the ChargeModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Charge": {
+      "get": {
+        "tags": [
+          "Charge"
+        ],
+        "summary": "Returns a list of all Charges. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of charges.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Charge"
+        ],
+        "summary": "Add a new charge using the data in the charge model. (Auth roles: Administrator,API Super-User,API User)",
+        "description": "Sample request: POST /Charge { \"ChargeName\": \"Charge1\", \"ChargeRate\": 15.6,\r\n\"ChargeType\": 2 }",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A ChargeModel containing the charge data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the ChargeModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the ChargeModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Customer/{id}": {
+      "delete": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Delete a Customer entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Customer identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the deleted Customer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Returns a Customer. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Customer identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the Customer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Update an existing Customer using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the Customer model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A CustomerModel containing the Customer data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the CustomerModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the CustomerModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Customer": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Returns a list of Customers based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Customers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomersModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Add a new Customer using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A CustomerModel containing Customer data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the CustomerModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the CustomerModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Discount/{id}": {
+      "delete": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Delete a Discount entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Discount identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the delete Discount.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Returns a Discount. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Discount identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the Discount.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscountModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Update an existing Discount using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "description": "Sample request: PUT /Discount { \"Id\": 1, \"DiscountName\": \"Discount1\",\r\n\"DiscountRate\": 15.6, \"DiscountType\": 2 }",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the Discount model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A DiscountModel containing the Discount data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscountModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscountModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscountModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the DiscountModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscountModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the DiscountModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Discount": {
+      "get": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Returns a list of all Discounts. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Discounts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DiscountModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Add a new Discount using the data in the Discount model. (Auth roles: Administrator,API Super-User,API User)",
+        "description": "Sample request: POST /Discount { \"DiscountName\": \"Discount1\",\r\n\"DiscountRate\": 15.6, \"DiscountType\": 2 }",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A DiscountModel containing the Discount data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscountModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscountModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscountModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the DiscountModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscountModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the DiscountModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Hauler/{id}": {
+      "delete": {
+        "tags": [
+          "Hauler"
+        ],
+        "summary": "Delete a Hauler entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Hauler identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the delete Hauler.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Hauler"
+        ],
+        "summary": "Returns a Hauler. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Hauler identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the Hauler.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HaulerModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Hauler"
+        ],
+        "summary": "Update an existing Hauler using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the Hauler model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A HaulerModel containing the Hauler data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HaulerModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HaulerModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/HaulerModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the HaulerModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HaulerModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the HaulerModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Hauler": {
+      "get": {
+        "tags": [
+          "Hauler"
+        ],
+        "summary": "Returns a list of Haulers based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Haulers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HaulerModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Hauler"
+        ],
+        "summary": "Add a new Hauler using the data in the Hauler model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A HaulerModel containing the Hauler data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HaulerModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HaulerModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/HaulerModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the HaulerModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HaulerModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the HaulerModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Inbound": {
+      "get": {
+        "tags": [
+          "Inbound"
+        ],
+        "summary": "Returns a list of Inbounds based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Inbounds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InboundModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Job/{id}": {
+      "delete": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Delete a Job entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Job identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the deleted Job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Returns a Job. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Job identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the Job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Update an existing Job using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the Job model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A JobModel containing the Job data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the JobModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the JobModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Job": {
+      "get": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Returns a list of Jobs based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Jobs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobsModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Add a new Job using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A JobModel containing Job data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the JobModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the JobModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Outbound": {
+      "get": {
+        "tags": [
+          "Outbound"
+        ],
+        "summary": "Returns a list of Outbounds based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Start Date; optional",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "End Date; optional",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Outbounds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutboundModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Product/{id}": {
+      "delete": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Delete a Product entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Product identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the delete Product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Returns a Product. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Product identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the Product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Update an existing Product using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the Product model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A ProductModel containing the Product data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the ProductModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the ProductModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Product": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Returns a list of Products based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Products.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Add a new Product using the data in the Product model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A ProductModel containing the Product data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the ProductModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the ProductModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Truck/{id}": {
+      "delete": {
+        "tags": [
+          "Truck"
+        ],
+        "summary": "Delete a Truck entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Truck identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the deleted Truck.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Truck"
+        ],
+        "summary": "Returns a Truck. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Truck identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the Truck.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TruckModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Truck"
+        ],
+        "summary": "Update an existing Truck using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the Truck model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A TruckModel containing the Truck data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the TruckModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TruckModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the TruckModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Truck": {
+      "get": {
+        "tags": [
+          "Truck"
+        ],
+        "summary": "Returns a list of Trucks based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Trucks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrucksModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Truck"
+        ],
+        "summary": "Add a new Truck using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A TruckModel containing Truck data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TruckModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the TruckModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TruckModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the TruckModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/UniversalFee/{id}": {
+      "delete": {
+        "tags": [
+          "UniversalFee"
+        ],
+        "summary": "Delete a universalfee entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The universalfee identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the deleted universalfee.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "UniversalFee"
+        ],
+        "summary": "Returns a UniversalFee. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The universalfee identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the universalfee.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UniversalFeeModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "UniversalFee"
+        ],
+        "summary": "Update an existing universalfee using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "description": "Sample request: PUT /UniversalFee { \"Id\": 1, \"UniversalFeeName\": \"UniversalFee1\",\r\n\"UniversalFeeRate\": 15.6, \"UniversalFeeType\": 2 }",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the universalfee model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A UniversalFeeModel containing the universalfee data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniversalFeeModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniversalFeeModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniversalFeeModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the UniversalFeeModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UniversalFeeModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the UniversalFeeModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/UniversalFee": {
+      "get": {
+        "tags": [
+          "UniversalFee"
+        ],
+        "summary": "Returns a list of all UniversalFees. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of universalfees.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UniversalFeeModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "UniversalFee"
+        ],
+        "summary": "Add a new universalfee using the data in the universalfee model. (Auth roles: Administrator,API Super-User,API User)",
+        "description": "Sample request: POST /UniversalFee { \"UniversalFeeName\": \"UniversalFee1\", \"UniversalFeeRate\": 15.6,\r\n\"UniversalFeeType\": 2 }",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A UniversalFeeModel containing the universalfee data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniversalFeeModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniversalFeeModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniversalFeeModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the UniversalFeeModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UniversalFeeModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the UniversalFeeModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Vendor/{id}": {
+      "delete": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Delete a Vendor entity. (Auth roles: Administrator,API Super-User, Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Vendor identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the id of the deleted Vendor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Returns a Vendor. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Vendor identifier.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the Vendor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Update an existing Vendor using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the Id of the Vendor model.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A VendorModel containing the Vendor data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the VendorModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the VendorModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Vendor": {
+      "get": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Returns a list of Vendors based on optional search criteria. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "searchText",
+            "in": "query",
+            "description": "Search text; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of records to skip; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "description": "Number of records to return; optional",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field name to sort by; optional",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "description": "Set true to sort descending; optional.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the list of Vendors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VendorsModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "404": {
+            "description": "If the item was not found."
+          },
+          "500": {
+            "description": "If something went wrong."
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Add a new Vendor using the data in the model. (Auth roles: Administrator,API Super-User,API User)",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The requested API version",
+            "schema": {
+              "type": "string",
+              "default": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A VendorModel containing Vendor data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Returns the VendorModel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the VendorModel was not valid or was null."
+          },
+          "401": {
+            "description": "If access is not authorized."
+          },
+          "403": {
+            "description": "If access is forbidden."
+          },
+          "500": {
+            "description": "If something went wrong."
+          }
+        },
+        "security": [
+          {
+            "oauth2": [ ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Address": {
+        "required": [
+          "city",
+          "country",
+          "line1",
+          "line2",
+          "line3",
+          "postalCode",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "city": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "country": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "line1": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "line2": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "line3": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "postalCode": {
+            "maxLength": 15,
+            "minLength": 0,
+            "type": "string"
+          },
+          "state": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AddressModel": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The city.",
+            "nullable": true
+          },
+          "country": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The country.",
+            "nullable": true
+          },
+          "line1": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The first line of address.",
+            "nullable": true
+          },
+          "line2": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The second line of address.",
+            "nullable": true
+          },
+          "line3": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The third line of address.",
+            "nullable": true
+          },
+          "postalCode": {
+            "maxLength": 15,
+            "minLength": 0,
+            "type": "string",
+            "description": "The postal code.",
+            "nullable": true
+          },
+          "state": {
+            "maxLength": 15,
+            "minLength": 0,
+            "type": "string",
+            "description": "The state.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChargeModel": {
+        "required": [
+          "chargeName"
+        ],
+        "type": "object",
+        "properties": {
+          "chargeName": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The charge name"
+          },
+          "chargeRate": {
+            "type": "number",
+            "description": "The charge rate.",
+            "format": "double"
+          },
+          "chargeType": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer",
+            "description": "The type of the charge.\r\n(TaxableWeightBased: 0,\r\nNonTaxableWeightBased: 1,\r\nTaxablePriceBased: 2,\r\nNonTaxablePriceBased: 3,\r\nTaxableFixed: 4,\r\nNonTaxableFixed: 5,\r\nTax: 6)",
+            "format": "int32"
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the charge.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChargeType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "CostModel": {
+        "type": "object",
+        "properties": {
+          "unitPrice": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "$ref": "#/components/schemas/CostUnitOfMeasure"
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the cost.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostUnitOfMeasure": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "CustomerModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "baseDiscount": {
+            "$ref": "#/components/schemas/DiscountModel"
+          },
+          "billToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "contactName": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The contact name.",
+            "nullable": true
+          },
+          "customerCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChargeModel"
+            },
+            "description": "The list of charges.",
+            "nullable": true
+          },
+          "customerProductDiscounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerProductDiscountModel"
+            },
+            "description": "The list of product discounts.",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 1024,
+            "minLength": 0,
+            "type": "string",
+            "description": "The customer email address.",
+            "nullable": true
+          },
+          "favorite": {
+            "type": "boolean",
+            "description": "flag that indicates that this truck is a favorite."
+          },
+          "fax": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "The fax number.",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the customer.",
+            "format": "int32"
+          },
+          "inactive": {
+            "type": "boolean",
+            "description": "The value indicating whether this customer is inactive."
+          },
+          "inboundTicket": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "description": "The inbound ticket.",
+            "nullable": true
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The customer name."
+          },
+          "notes": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "The notes.",
+            "nullable": true
+          },
+          "outboundTicket": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "description": "The outbound ticket.",
+            "nullable": true
+          },
+          "phone": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "The phone number.",
+            "nullable": true
+          },
+          "shipToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "userCustomerId": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string",
+            "description": "The user customer identifier.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CustomerProductDiscountModel": {
+        "type": "object",
+        "properties": {
+          "discount": {
+            "$ref": "#/components/schemas/DiscountModel"
+          },
+          "expirationDate": {
+            "type": "string",
+            "description": "The expiration date for the product discount.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductModel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CustomersModel": {
+        "type": "object",
+        "properties": {
+          "customers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerModel"
+            },
+            "nullable": true
+          },
+          "totalRecords": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DiscountModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the discount.",
+            "format": "int32"
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The discount name."
+          },
+          "rate": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "number",
+            "description": "The percentage discount rate.",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FeeModel": {
+        "type": "object",
+        "properties": {
+          "unitPrice": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "description": "The fee's unit price.",
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "$ref": "#/components/schemas/CostUnitOfMeasure"
+          },
+          "description": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "The fee description.",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the fee.",
+            "format": "int32"
+          },
+          "includeInTotalPrice": {
+            "type": "boolean",
+            "description": "Select whether or not this fee should be included in the total price of transaction."
+          }
+        },
+        "additionalProperties": false
+      },
+      "HaulerModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "charges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChargeModel"
+            },
+            "description": "The list of charges associated with the hauler",
+            "nullable": true,
+            "readOnly": true
+          },
+          "contactName": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The hauler contact name.",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 1024,
+            "minLength": 0,
+            "type": "string",
+            "description": "The hauler email address.",
+            "nullable": true
+          },
+          "fax": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "The hauler fax number.",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the hauler.",
+            "format": "int32"
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The hauler name."
+          },
+          "phone": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "The hauler phone number.",
+            "nullable": true
+          },
+          "trucks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TruckModel"
+            },
+            "description": "The list of trucks associated with the hauler.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InboundModel": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "jobId": {
+            "type": "string",
+            "nullable": true
+          },
+          "jobName": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "manual": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "productId": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "scaleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "transactionMode": {
+            "type": "string",
+            "nullable": true
+          },
+          "truckId": {
+            "type": "string",
+            "nullable": true
+          },
+          "truckName": {
+            "type": "string",
+            "nullable": true
+          },
+          "units": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldData1": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldData2": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldData3": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldLabel1": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldLabel2": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldLabel3": {
+            "type": "string",
+            "nullable": true
+          },
+          "vendorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "vendorName": {
+            "type": "string",
+            "nullable": true
+          },
+          "weight": {
+            "type": "number",
+            "format": "double"
+          },
+          "weightString": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "JobModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "closed": {
+            "type": "boolean",
+            "description": "set to indicate that the job is closed."
+          },
+          "customerId": {
+            "type": "integer",
+            "description": "The customer for this job.",
+            "format": "int32"
+          },
+          "deliveryAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "favorite": {
+            "type": "boolean",
+            "description": "flag that indicates that this truck is a favorite."
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the Job.",
+            "format": "int32"
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The Job name."
+          },
+          "notes": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "The job notes.",
+            "nullable": true
+          },
+          "pricing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobPricingModel"
+            },
+            "description": "The list of special pricing models associated with this job.",
+            "nullable": true
+          },
+          "userJobId": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string",
+            "description": "The user provided job identifier.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "JobPricingModel": {
+        "type": "object",
+        "properties": {
+          "discountId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderedAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "productId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "JobsModel": {
+        "type": "object",
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobModel"
+            },
+            "nullable": true
+          },
+          "totalRecords": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LocationPriceModel": {
+        "required": [
+          "location"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string"
+          },
+          "price": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          },
+          "priceUnitOfMeasure": {
+            "$ref": "#/components/schemas/Units"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginModel": {
+        "required": [
+          "password",
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "password": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The account password."
+          },
+          "userName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The account name, commonly an email address."
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginResultModel": {
+        "type": "object",
+        "properties": {
+          "expiration": {
+            "type": "string",
+            "description": "The expiration date of the token.",
+            "format": "date-time"
+          },
+          "token": {
+            "type": "string",
+            "description": "The authentication bearer token. Pass this in the Authorization header on\r\nsubsequent API interation.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OutboundModel": {
+        "type": "object",
+        "properties": {
+          "charges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedChargeModel"
+            },
+            "nullable": true
+          },
+          "customer": {
+            "$ref": "#/components/schemas/OwnedCustomerModel"
+          },
+          "gross": {
+            "type": "number",
+            "format": "double"
+          },
+          "grossWeightString": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inboundDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "job": {
+            "$ref": "#/components/schemas/OwnedJobModel"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "manual": {
+            "type": "boolean"
+          },
+          "net": {
+            "type": "number",
+            "format": "double"
+          },
+          "netPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "outboundDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "product": {
+            "$ref": "#/components/schemas/OwnedProductModel"
+          },
+          "productCosts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedProductCost"
+            },
+            "nullable": true
+          },
+          "scaleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "tare": {
+            "type": "number",
+            "format": "double"
+          },
+          "tareType": {
+            "type": "string",
+            "nullable": true
+          },
+          "ticketNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "transactionMode": {
+            "type": "string",
+            "nullable": true
+          },
+          "truck": {
+            "$ref": "#/components/schemas/OwnedTruckModel"
+          },
+          "units": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldData1": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldData2": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldData3": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldLabel1": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldLabel2": {
+            "type": "string",
+            "nullable": true
+          },
+          "userFieldLabel3": {
+            "type": "string",
+            "nullable": true
+          },
+          "userTransientTruckId": {
+            "type": "string",
+            "nullable": true
+          },
+          "vendor": {
+            "$ref": "#/components/schemas/OwnedVendorModel"
+          },
+          "void": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedChargeModel": {
+        "type": "object",
+        "properties": {
+          "chargeAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "chargeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "chargeRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "chargeType": {
+            "$ref": "#/components/schemas/ChargeType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedCost": {
+        "type": "object",
+        "properties": {
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "$ref": "#/components/schemas/CostUnitOfMeasure"
+          },
+          "isNull": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedCostModel": {
+        "type": "object",
+        "properties": {
+          "unitOfMeasure": {
+            "$ref": "#/components/schemas/CostUnitOfMeasure"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedCustomerModel": {
+        "type": "object",
+        "properties": {
+          "baseDiscount": {
+            "$ref": "#/components/schemas/OwnedDiscountModel"
+          },
+          "billToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "contactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "fax": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inboundTicket": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "outboundTicket": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "productDiscounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedProductDiscountModel"
+            },
+            "nullable": true
+          },
+          "shipToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "userCustomerId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedDiscountModel": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedHaulerModel": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "contactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "fax": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedJobModel": {
+        "type": "object",
+        "properties": {
+          "closed": {
+            "type": "boolean"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/OwnedCustomerModel"
+          },
+          "deliveryAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "pricing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedJobPricingModel"
+            },
+            "nullable": true
+          },
+          "userJobId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedJobPricingModel": {
+        "type": "object",
+        "properties": {
+          "discount": {
+            "$ref": "#/components/schemas/OwnedDiscountModel"
+          },
+          "orderedAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "product": {
+            "$ref": "#/components/schemas/OwnedProductModel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedLocationPrice": {
+        "required": [
+          "location"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "location": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string"
+          },
+          "price": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          },
+          "priceUnitOfMeasure": {
+            "$ref": "#/components/schemas/Units"
+          },
+          "priceUnitOfMeasureString": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedProduct": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inventory": {
+            "type": "number",
+            "format": "double"
+          },
+          "isNull": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "locationPrices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedLocationPrice"
+            },
+            "nullable": true
+          },
+          "minimumCharge": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "notes": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          },
+          "priceUnitOfMeasure": {
+            "$ref": "#/components/schemas/Units"
+          },
+          "priceUnitOfMeasureString": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "productId": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedProductCost": {
+        "type": "object",
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/OwnedCost"
+          },
+          "product": {
+            "$ref": "#/components/schemas/OwnedProduct"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedProductCostModel": {
+        "type": "object",
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/OwnedCostModel"
+          },
+          "product": {
+            "$ref": "#/components/schemas/OwnedProductModel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedProductDiscountModel": {
+        "type": "object",
+        "properties": {
+          "discount": {
+            "$ref": "#/components/schemas/OwnedDiscountModel"
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "product": {
+            "$ref": "#/components/schemas/OwnedProductModel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedProductModel": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minimumCharge": {
+            "type": "number",
+            "format": "double"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceUnitOfMeasure": {
+            "$ref": "#/components/schemas/Units"
+          },
+          "priceUnitOfMeasureString": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "productId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedTruckModel": {
+        "type": "object",
+        "properties": {
+          "hauler": {
+            "$ref": "#/components/schemas/OwnedHaulerModel"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "insuranceExpiration": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "maximumWeight": {
+            "type": "number",
+            "format": "double"
+          },
+          "minimumWeight": {
+            "type": "number",
+            "format": "double"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "radioTag": {
+            "type": "string",
+            "nullable": true
+          },
+          "tare": {
+            "type": "number",
+            "format": "double"
+          },
+          "tareAcquired": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "tareExpiration": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "tareType": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailerId1": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailerId2": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailerId3": {
+            "type": "string",
+            "nullable": true
+          },
+          "truckId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OwnedVendorModel": {
+        "type": "object",
+        "properties": {
+          "baseDiscount": {
+            "$ref": "#/components/schemas/OwnedDiscountModel"
+          },
+          "billToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "contactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "fax": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inboundTicket": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "outboundTicket": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "productCosts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedProductCostModel"
+            },
+            "nullable": true
+          },
+          "productDiscounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedProductDiscountModel"
+            },
+            "nullable": true
+          },
+          "shipToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "userVendorId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "charges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChargeModel"
+            },
+            "description": "The list of charges for the product.",
+            "nullable": true
+          },
+          "locationPrices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationPriceModel"
+            },
+            "description": "The list of location-based prices for the product.",
+            "nullable": true
+          },
+          "description": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "The product description.",
+            "nullable": true
+          },
+          "favorite": {
+            "type": "boolean",
+            "description": "flag that indicates that this product is a favorite."
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the product.",
+            "format": "int32"
+          },
+          "inactive": {
+            "type": "boolean",
+            "description": "flag to indicate whether the product is inactive."
+          },
+          "inventory": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "description": "The current inventory of the product.",
+            "format": "double"
+          },
+          "minimumCharge": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "description": "The minimum charge for the product.",
+            "format": "double"
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The product name."
+          },
+          "notes": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Product notes.",
+            "nullable": true
+          },
+          "price": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "description": "The product price (per unit of measure).",
+            "format": "double"
+          },
+          "priceUnitOfMeasure": {
+            "maximum": 3,
+            "minimum": 0,
+            "type": "integer",
+            "description": "the price unit of measure (Pound: 0, Kilogram: 1, ShortTon: 2, MetricTon: 3)",
+            "format": "int32"
+          },
+          "productId": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string",
+            "description": "The user defined product id.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TruckModel": {
+        "required": [
+          "name",
+          "tareType",
+          "truckId"
+        ],
+        "type": "object",
+        "properties": {
+          "defaultCustomerId": {
+            "type": "integer",
+            "description": "The optional default customer id associated with this truck.",
+            "format": "int32",
+            "nullable": true
+          },
+          "defaultJobId": {
+            "type": "integer",
+            "description": "The optional default job id associated with this truck.",
+            "format": "int32",
+            "nullable": true
+          },
+          "defaultProductId": {
+            "type": "integer",
+            "description": "The optional default product id associated with this truck.",
+            "format": "int32",
+            "nullable": true
+          },
+          "defaultVendorId": {
+            "type": "integer",
+            "description": "The optional default vendor id associated with this truck.",
+            "format": "int32",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 1024,
+            "minLength": 0,
+            "type": "string",
+            "description": "The truck email address.",
+            "nullable": true
+          },
+          "favorite": {
+            "type": "boolean",
+            "description": "flag that indicates that this truck is a favorite."
+          },
+          "haulerId": {
+            "type": "integer",
+            "description": "The optional hauler id associated with this truck.",
+            "format": "int32",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the truck.",
+            "format": "int32"
+          },
+          "inactive": {
+            "type": "boolean",
+            "description": "flag that indicates that this truck is inactive."
+          },
+          "insuranceExpiration": {
+            "type": "string",
+            "description": "The insurance expiration date.",
+            "format": "date-time"
+          },
+          "licensePlate": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "licensePlateRegion": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "maximumWeight": {
+            "maximum": 9999999,
+            "minimum": 0,
+            "type": "number",
+            "description": "The maximum legal weight of the truck.",
+            "format": "double"
+          },
+          "minimumWeight": {
+            "maximum": 9999999,
+            "minimum": 0,
+            "type": "number",
+            "description": "The minimum transaction weight of the truck",
+            "format": "double"
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The truck name."
+          },
+          "radioTag": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": "string",
+            "description": "The truck's optional radio tag.",
+            "nullable": true
+          },
+          "tare": {
+            "type": "number",
+            "description": "The truck's tare weight.",
+            "format": "double"
+          },
+          "tareAcquisition": {
+            "type": "string",
+            "description": "The date that the tare was acquired.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "tareExpiration": {
+            "type": "string",
+            "description": "The date that the tare expires.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "tareType": {
+            "minLength": 1,
+            "pattern": "\\b(Stored|Keyed|Weighed)\\b",
+            "type": "string",
+            "description": "The type of tare for the truck."
+          },
+          "trailerId1": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The truck's optional first trailer id.",
+            "nullable": true
+          },
+          "trailerId2": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The truck's optional second trailer id.",
+            "nullable": true
+          },
+          "trailerId3": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The truck's optional third trailer id.",
+            "nullable": true
+          },
+          "truckId": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The user provided truck id."
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrucksModel": {
+        "type": "object",
+        "properties": {
+          "totalRecords": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "trucks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TruckModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Units": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "UniversalFeeModel": {
+        "required": [
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "unitPrice": {
+            "maximum": 999999999,
+            "minimum": 0,
+            "type": "number",
+            "description": "The fee's unit price.",
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "$ref": "#/components/schemas/CostUnitOfMeasure"
+          },
+          "description": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "The fee description."
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique id of the universal fee.",
+            "format": "int32"
+          },
+          "includeInTotalPrice": {
+            "type": "boolean",
+            "description": "Select whether or not this fee should be included in the total price of transaction."
+          }
+        },
+        "additionalProperties": false
+      },
+      "VendorModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "baseDiscount": {
+            "$ref": "#/components/schemas/DiscountModel"
+          },
+          "billToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "contactName": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The contact name.",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 1024,
+            "minLength": 0,
+            "type": "string",
+            "description": "The vendor email address.",
+            "nullable": true
+          },
+          "favorite": {
+            "type": "boolean",
+            "description": "flag that indicates that this vendor is a favorite."
+          },
+          "fax": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "The fax number.",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the vendor.",
+            "format": "int32"
+          },
+          "inactive": {
+            "type": "boolean",
+            "description": "The value indicating whether this vendor is inactive."
+          },
+          "inboundTicket": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "description": "The inbound ticket.",
+            "nullable": true
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The vendor name."
+          },
+          "notes": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "The notes.",
+            "nullable": true
+          },
+          "outboundTicket": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "description": "The outbound ticket.",
+            "nullable": true
+          },
+          "phone": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "The phone number.",
+            "nullable": true
+          },
+          "shipToAddress": {
+            "$ref": "#/components/schemas/AddressModel"
+          },
+          "userVendorId": {
+            "maxLength": 25,
+            "minLength": 0,
+            "type": "string",
+            "description": "The user vendor identifier.",
+            "nullable": true
+          },
+          "vendorCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChargeModel"
+            },
+            "description": "The list of charges.",
+            "nullable": true
+          },
+          "vendorFees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UniversalFeeModel"
+            },
+            "description": "The list of universal fees.",
+            "nullable": true
+          },
+          "vendorProductCosts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorProductCostModel"
+            },
+            "description": "The list of product costs.",
+            "nullable": true
+          },
+          "vendorProductDiscounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorProductDiscountModel"
+            },
+            "description": "The list of product discounts.",
+            "nullable": true
+          },
+          "vendorProductFees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorProductFeeModel"
+            },
+            "description": "The list of product specific fees.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VendorProductCostModel": {
+        "type": "object",
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/CostModel"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductModel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VendorProductDiscountModel": {
+        "type": "object",
+        "properties": {
+          "discount": {
+            "$ref": "#/components/schemas/DiscountModel"
+          },
+          "expirationDate": {
+            "type": "string",
+            "description": "The expiration date for the product discount.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductModel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VendorProductFeeModel": {
+        "type": "object",
+        "properties": {
+          "fee": {
+            "$ref": "#/components/schemas/FeeModel"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product": {
+            "$ref": "#/components/schemas/ProductModel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VendorsModel": {
+        "type": "object",
+        "properties": {
+          "totalRecords": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "vendors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "oauth2": {
+        "type": "apiKey",
+        "description": "Standard authorization Header using Bearer scheme. Example: \"Bearer {token}\"",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  }
+}

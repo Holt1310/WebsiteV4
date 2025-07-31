@@ -1,0 +1,42 @@
+[
+  {
+    "title": "OnTrak Tech Manual",
+    "description": "Full OnTrak Enterprise Technical Manual",
+    "type": "download",
+    "path": "M_216813_OnTrakEnterprise_Tech_enUS.pdf",
+    "dynamic": false,
+    "category": "Ontrak"
+  },
+  {
+    "title": "API Documentation",
+    "description": "Quick start instructions",
+    "type": "download",
+    "path": "7c6f8190-d081-420d-b5e0-b5fac8f9c57b.pdf",
+    "dynamic": false,
+    "category": "Ontrak"
+  },
+  {
+    "title": "ENG Server",
+    "description": "",
+    "type": "url",
+    "path": "http://engserver/",
+    "dynamic": false,
+    "category": "General"
+  },
+  {
+    "title": "DEPT 22 Ontrak Install",
+    "description": "",
+    "type": "url",
+    "path": "http://10.2.22.66:5000/",
+    "dynamic": false,
+    "category": "Ontrak"
+  },
+  {
+    "title": "Ontrak API Model",
+    "description": "",
+    "type": "download",
+    "path": "swagger.json",
+    "dynamic": false,
+    "category": "Ontrak"
+  }
+]
