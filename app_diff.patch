@@ -1,0 +1,55 @@
+*** Begin Patch
+*** Update File: app.py
+@@
+ def cleanup_chat_on_startup():
+@@
+     cleanup_chat_on_startup()
+
+def parse_json_or_form(req):
+    """
+    Return a tuple of (data_dict, is_json).
+    Tries JSON first; falls back to form data.
+    """
+    data = req.get_json(silent=True)
+    if isinstance(data, dict):
+        return data, True
+    return req.form.to_dict(), False
+@@ def manage_post_tags(index):
+-        data = request.get_json() or {}
++        data = request.get_json(silent=True) or {}
+@@ def manage_post_tags(index):
+-        data = request.get_json() or {}
++        data = request.get_json(silent=True) or {}
+@@ def manage_post_annotations(index):
+-        data = request.get_json() or {}
++        data = request.get_json(silent=True) or {}
+@@ def manage_post_annotations(index):
+-        data = request.get_json() or {}
++        data = request.get_json(silent=True) or {}
+@@ def run_external_tool():
+-        data = request.get_json()
+-        tool_id = data.get('toolId')
++        data, is_json = parse_json_or_form(request)
++        tool_id = data.get('tool_id') or data.get('toolId')
+@@ def client_service_queue():
+-            data = request.get_json()
+-            action = data.get('action', 'add')
++            data, is_json = parse_json_or_form(request)
++            action = data.get('action', 'add')
+@@ def client_service_queue():
+-                tool_id = data.get('tool_id')
++                tool_id = data.get('tool_id') or data.get('toolId')
+@@ def client_service_queue():
+-                task_id = data.get('task_id')
++                task_id = data.get('task_id')
+@@ def manage_data_tables():
+-            data = request.get_json()
++            data = request.get_json(silent=True) or {}
+@@ def manage_data_tables():
+-                table_name = data.get('table_name', '').strip()
+-                description = data.get('description', '').strip()
+-                columns = data.get('columns', [])
++                table_name = (data.get('table_name') or data.get('tableName') or '').strip()
++                description = data.get('description') or data.get('Description') or ''
++                columns = data.get('columns') or data.get('Columns') or []
+*** End Patch
