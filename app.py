@@ -34,6 +34,9 @@ UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 CHATS_PATH = os.path.join(app.root_path, 'chat.json')
 ADMINS_PATH = os.path.join(app.root_path, 'admins.json')
 EXTERNAL_TOOLS_CONFIG_PATH = os.path.join(app.root_path, 'external_tools_config.json')
+CASE_TEMPLATES_PATH = os.path.join(app.root_path, 'case_templates.json')
+CASES_PATH = os.path.join(app.root_path, 'cases.json')
+DATA_TABLES_JSON_PATH = os.path.join(app.root_path, 'data_tables.json')
 ALLOWED_ATTACH_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'txt', 'doc', 'docx', 'zip', 'rar', '7z'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -116,6 +119,42 @@ def load_categories():
 def save_categories(categories):
     with open(CATEGORIES_PATH, 'w', encoding='utf-8') as f:
         json.dump(categories, f, indent=2, ensure_ascii=False)
+
+
+def load_case_templates():
+    if not os.path.exists(CASE_TEMPLATES_PATH):
+        return []
+    with open(CASE_TEMPLATES_PATH, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def save_case_templates(templates):
+    with open(CASE_TEMPLATES_PATH, 'w', encoding='utf-8') as f:
+        json.dump(templates, f, indent=2, ensure_ascii=False)
+
+
+def load_cases():
+    if not os.path.exists(CASES_PATH):
+        return []
+    with open(CASES_PATH, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def save_cases(cases):
+    with open(CASES_PATH, 'w', encoding='utf-8') as f:
+        json.dump(cases, f, indent=2, ensure_ascii=False)
+
+
+def load_data_tables():
+    if not os.path.exists(DATA_TABLES_JSON_PATH):
+        return []
+    with open(DATA_TABLES_JSON_PATH, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def save_data_tables(tables):
+    with open(DATA_TABLES_JSON_PATH, 'w', encoding='utf-8') as f:
+        json.dump(tables, f, indent=2, ensure_ascii=False)
 
 
 RESOURCES_PATH = os.path.join(app.root_path, "resources.json")
@@ -1765,6 +1804,79 @@ def client_tools(filename):
     return send_from_directory(client_tools_dir, filename)
 
 
+@app.route('/admin/case-templates', methods=['GET', 'POST'])
+def manage_case_templates():
+    """Admin interface to manage case templates stored in JSON."""
+    if not session.get('logged_in') or not session.get('secret_admin'):
+        return redirect(url_for('login'))
+
+    templates = load_case_templates()
+    error = None
+    success = None
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        if action == 'create':
+            name = request.form.get('template_name', '').strip()
+            field_count = int(request.form.get('field_count', 0))
+            fields = []
+            for i in range(field_count):
+                fname = request.form.get(f'field_{i}_name', '').strip()
+                ftype = request.form.get(f'field_{i}_type', 'text')
+                fopts = request.form.get(f'field_{i}_options', '')
+                options = [o.strip() for o in fopts.split(',') if o.strip()]
+                if fname:
+                    fields.append({'name': fname, 'type': ftype, 'options': options})
+            if name and fields:
+                if any(t['name'] == name for t in templates):
+                    error = 'Template already exists'
+                else:
+                    templates.append({'name': name, 'fields': fields})
+                    save_case_templates(templates)
+                    success = 'Template created'
+            else:
+                error = 'Template name and at least one field are required'
+        elif action == 'delete':
+            name = request.form.get('template_name', '').strip()
+            templates = [t for t in templates if t['name'] != name]
+            save_case_templates(templates)
+            success = f'Template {name} deleted'
+
+    return render_template('admin_case_templates.html', templates=templates, error=error, success=success)
+
+
+@app.route('/admin/cases', methods=['GET', 'POST'])
+def manage_cases():
+    """Admin interface to create and view cases."""
+    if not session.get('logged_in') or not session.get('secret_admin'):
+        return redirect(url_for('login'))
+
+    templates = load_case_templates()
+    cases = load_cases()
+    error = None
+    success = None
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        if action == 'create':
+            template_name = request.form.get('template')
+            template = next((t for t in templates if t['name'] == template_name), None)
+            if not template:
+                error = 'Invalid template'
+            else:
+                case_data = {f['name']: request.form.get(f['name'], '') for f in template['fields']}
+                cases.append({
+                    'template': template_name,
+                    'data': case_data,
+                    'created_at': datetime.now().isoformat(),
+                    'created_by': session.get('username', 'admin'),
+                    'comments': []
+                })
+                save_cases(cases)
+                success = 'Case created'
+
+    return render_template('admin_cases.html', templates=templates, cases=cases, error=error, success=success)
+
 
 
 @app.route('/uploads/<path:filename>')
@@ -1860,23 +1972,22 @@ def manage_data_tables():
     error = None
     success = None
     
+    tables = load_data_tables()
+
     if request.method == 'POST':
         action = request.form.get('action', '')
-        
+
         if action == 'create':
             table_name = request.form.get('table_name', '').strip()
             description = request.form.get('description', '').strip()
-            
-            # Parse columns from form
+
             columns = []
             column_count = int(request.form.get('column_count', 0))
-            
             for i in range(column_count):
                 col_name = request.form.get(f'column_{i}_name', '').strip()
                 col_type = request.form.get(f'column_{i}_type', 'string')
                 col_required = bool(request.form.get(f'column_{i}_required'))
                 col_unique = bool(request.form.get(f'column_{i}_unique'))
-                
                 if col_name:
                     columns.append({
                         'name': col_name,
@@ -1884,45 +1995,38 @@ def manage_data_tables():
                         'required': col_required,
                         'unique': col_unique
                     })
-            
+
             if table_name and columns:
-                try:
-                    from db_utils import create_custom_table
-                    success_flag, message = create_custom_table(table_name, columns, description)
-                    if success_flag:
-                        success = message
-                    else:
-                        error = message
-                except Exception as e:
-                    error = f"Error creating table: {str(e)}"
+                if any(t['table_name'] == table_name for t in tables):
+                    error = f"Table '{table_name}' already exists"
+                else:
+                    tables.append({
+                        'table_name': table_name,
+                        'display_name': table_name.replace('_', ' ').title(),
+                        'description': description,
+                        'columns': columns,
+                        'rows': [],
+                        'created_at': datetime.now().isoformat()
+                    })
+                    save_data_tables(tables)
+                    success = f"Table '{table_name}' created successfully"
             else:
                 error = "Table name and at least one column are required"
-                
+
         elif action == 'delete':
             table_name = request.form.get('table_name', '').strip()
             if table_name:
-                try:
-                    from db_utils import delete_custom_table
-                    success_flag, message = delete_custom_table(table_name)
-                    if success_flag:
-                        success = message
-                    else:
-                        error = message
-                except Exception as e:
-                    error = f"Error deleting table: {str(e)}"
+                tables = [t for t in tables if t['table_name'] != table_name]
+                save_data_tables(tables)
+                success = f"Table '{table_name}' deleted"
     
-    # Load existing tables
-    try:
-        from db_utils import get_custom_tables
-        tables = get_custom_tables()
-    except Exception as e:
-        print(f"Error loading custom tables: {e}")
-        tables = []
-        error = "Error loading tables from database"
-    
-    return render_template('admin_data_tables.html', 
+    # Load existing tables from JSON (already loaded above)
+    for t in tables:
+        t['row_count'] = len(t.get('rows', []))
+
+    return render_template('admin_data_tables.html',
                          tables=tables,
-                         error=error, 
+                         error=error,
                          success=success)
 
 
@@ -1936,13 +2040,9 @@ def manage_table_data(table_name):
     success = None
     
     # Get table metadata
-    try:
-        from db_utils import get_custom_tables
-        tables = get_custom_tables()
-        table_info = next((t for t in tables if t['table_name'] == table_name), None)
-        if not table_info:
-            return redirect(url_for('manage_data_tables'))
-    except Exception as e:
+    tables = load_data_tables()
+    table_info = next((t for t in tables if t['table_name'] == table_name), None)
+    if not table_info:
         return redirect(url_for('manage_data_tables'))
     
     if request.method == 'POST':
@@ -1979,36 +2079,27 @@ def manage_table_data(table_name):
                 row_data[col_name] = value
             
             if not error:
-                try:
-                    from db_utils import insert_custom_table_row
-                    success_flag, message = insert_custom_table_row(
-                        table_name, 
-                        row_data, 
-                        session.get('username', 'admin')
-                    )
-                    if success_flag:
-                        success = message
-                    else:
-                        error = message
-                except Exception as e:
-                    error = f"Error adding row: {str(e)}"
+                table_info.setdefault('rows', []).append({
+                    **row_data,
+                    'created_at': datetime.now().isoformat(),
+                    'created_by': session.get('username', 'admin')
+                })
+                save_data_tables(tables)
+                success = "Row inserted successfully"
     
-    # Get table data
-    try:
-        from db_utils import get_custom_table_data
-        page = int(request.args.get('page', 1))
-        per_page = 20
-        offset = (page - 1) * per_page
-        
-        result, err = get_custom_table_data(table_name, limit=per_page, offset=offset)
-        if err:
-            error = err
-            table_data = {'data': [], 'total': 0}
-        else:
-            table_data = result
-    except Exception as e:
-        error = f"Error loading table data: {str(e)}"
-        table_data = {'data': [], 'total': 0}
+    # Get table data from JSON
+    page = int(request.args.get('page', 1))
+    per_page = 20
+    offset = (page - 1) * per_page
+
+    rows = table_info.get('rows', [])
+    total = len(rows)
+    table_data = {
+        'data': rows[offset:offset + per_page],
+        'total': total,
+        'limit': per_page,
+        'offset': offset
+    }
     
     # Calculate pagination
     if table_data and 'total' in table_data:
@@ -2051,30 +2142,18 @@ def api_get_data_tables():
     if not session.get('logged_in'):
         return jsonify({'error': 'Not authenticated'}), 401
     
-    try:
-        from db_utils import get_custom_tables
-        tables = get_custom_tables()
-        
-        # Format for API consumption
-        api_tables = []
-        for table in tables:
-            api_tables.append({
-                'table_name': table['table_name'],
-                'display_name': table['display_name'],
-                'description': table['description'],
-                'row_count': table['row_count'],
-                'columns': table['columns']
-            })
-        
-        return jsonify({
-            'success': True,
-            'tables': api_tables,
-            'count': len(api_tables)
+    tables = load_data_tables()
+    api_tables = []
+    for table in tables:
+        api_tables.append({
+            'table_name': table['table_name'],
+            'display_name': table.get('display_name', table['table_name']),
+            'description': table.get('description', ''),
+            'row_count': len(table.get('rows', [])),
+            'columns': table.get('columns', [])
         })
-        
-    except Exception as e:
-        print(f"Error in API get data tables: {e}")
-        return jsonify({'error': 'Failed to load tables'}), 500
+
+    return jsonify({'success': True, 'tables': api_tables, 'count': len(api_tables)})
 
 
 @app.route('/api/data-tables/<table_name>/data')
@@ -2083,21 +2162,17 @@ def api_get_table_data(table_name):
     if not session.get('logged_in'):
         return jsonify({'error': 'Not authenticated'}), 401
     
-    try:
-        from db_utils import get_custom_table_for_reference
-        data, error = get_custom_table_for_reference(table_name)
-        
-        if error:
-            return jsonify({'error': error}), 404
-        
-        return jsonify({
-            'success': True,
-            'table_data': data
-        })
-        
-    except Exception as e:
-        print(f"Error in API get table data for {table_name}: {e}")
-        return jsonify({'error': 'Failed to load table data'}), 500
+    tables = load_data_tables()
+    table = next((t for t in tables if t['table_name'] == table_name), None)
+    if not table:
+        return jsonify({'error': 'Table not found'}), 404
+    data = {
+        'table_name': table['table_name'],
+        'display_name': table.get('display_name', table['table_name']),
+        'rows': table.get('rows', []),
+        'total_rows': len(table.get('rows', []))
+    }
+    return jsonify({'success': True, 'table_data': data})
 
 
 @app.route('/api/data-tables/<table_name>/related')
@@ -2110,15 +2185,18 @@ def api_get_related_data(table_name):
     value = request.args.get('value', '')
     return_cols = request.args.getlist('return')
 
-    try:
-        from db_utils import get_custom_table_related_data
-        row = get_custom_table_related_data(f"custom_{table_name}", column, value, return_cols)
-        if row is None:
-            return jsonify({'success': True, 'row': None})
-        return jsonify({'success': True, 'row': row})
-    except Exception as e:
-        print(f"Error getting related data for {table_name}: {e}")
-        return jsonify({'error': 'Failed to get related data'}), 500
+    tables = load_data_tables()
+    table = next((t for t in tables if t['table_name'] == table_name), None)
+    if not table:
+        return jsonify({'error': 'Table not found'}), 404
+    rows = table.get('rows', [])
+    for row in rows:
+        if str(row.get(column, '')) == value:
+            if return_cols:
+                filtered = {k: row.get(k) for k in return_cols}
+                return jsonify({'success': True, 'row': filtered})
+            return jsonify({'success': True, 'row': row})
+    return jsonify({'success': True, 'row': None})
 
 
 if __name__ == '__main__':

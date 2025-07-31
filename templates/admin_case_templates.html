@@ -1,0 +1,110 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Case Templates</h2>
+      {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+      {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+      <div class="card mb-4">
+        <div class="card-header"><h4>Create Template</h4></div>
+        <div class="card-body">
+          <form method="post" id="create-template-form">
+            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="field_count" id="field_count" value="1">
+            <div class="mb-3">
+              <label class="form-label" for="template_name">Template Name</label>
+              <input type="text" class="form-control" name="template_name" id="template_name" required>
+            </div>
+            <h5>Fields</h5>
+            <div id="fields-container">
+              <div class="field-definition border p-3 mb-3" data-field="0">
+                <div class="row">
+                  <div class="col-md-4">
+                    <label>Field Name</label>
+                    <input type="text" class="form-control" name="field_0_name" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label>Type</label>
+                    <select class="form-control" name="field_0_type">
+                      <option value="text">Text</option>
+                      <option value="number">Number</option>
+                      <option value="dropdown">Dropdown</option>
+                      <option value="checkbox">Checkbox</option>
+                      <option value="autocomplete">Autocomplete</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label>Options (comma separated)</label>
+                    <input type="text" class="form-control" name="field_0_options">
+                  </div>
+                  <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm remove-field" disabled>Remove</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <button type="button" class="btn btn-secondary" onclick="addField()">Add Field</button>
+              <button type="submit" class="btn btn-primary">Create Template</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h4>Existing Templates</h4></div>
+        <div class="card-body">
+          {% if templates %}
+          <ul class="list-group">
+            {% for t in templates %}
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ t.name }}</strong>
+                  <small class="text-muted">({{ t.fields|length }} fields)</small>
+                </div>
+                <form method="post" onsubmit="return confirm('Delete template {{ t.name }}?');">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="template_name" value="{{ t.name }}">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="alert alert-info">No templates defined.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let fieldCount = 1;
+function addField() {
+  const container = document.getElementById('fields-container');
+  const div = document.createElement('div');
+  div.className = 'field-definition border p-3 mb-3';
+  div.setAttribute('data-field', fieldCount);
+  div.innerHTML = `
+    <div class="row">
+      <div class="col-md-4"><input type="text" class="form-control" name="field_${fieldCount}_name" placeholder="Field name" required></div>
+      <div class="col-md-3"><select class="form-control" name="field_${fieldCount}_type"><option value="text">Text</option><option value="number">Number</option><option value="dropdown">Dropdown</option><option value="checkbox">Checkbox</option><option value="autocomplete">Autocomplete</option></select></div>
+      <div class="col-md-4"><input type="text" class="form-control" name="field_${fieldCount}_options" placeholder="Options"></div>
+      <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-danger btn-sm remove-field">Remove</button></div>
+    </div>`;
+  container.appendChild(div);
+  fieldCount++;
+  document.getElementById('field_count').value = fieldCount;
+  updateRemoveButtons();
+}
+function updateRemoveButtons() {
+  document.querySelectorAll('.remove-field').forEach(btn => {
+    btn.disabled = document.querySelectorAll('.remove-field').length <= 1;
+    btn.onclick = function(){ btn.closest('.field-definition').remove(); fieldCount--; document.getElementById('field_count').value = fieldCount; updateRemoveButtons(); };
+  });
+}
+document.addEventListener('DOMContentLoaded', updateRemoveButtons);
+</script>
+{% endblock %}
