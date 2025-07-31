@@ -1,0 +1,155 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+  <div class="container-fluid py-5">
+    <h1 class="display-5 fw-bold">Tech Guides &amp; Resources</h1>
+    <p class="col-md-8 fs-4">Browse our collection of guides and documentation organized by category.</p>
+    <a class="btn btn-primary btn-lg" href="/howto">View Posts</a>
+  </div>
+</div>
+
+<h2 id="resources" class="mb-4">Available Resources</h2>
+
+{% if resources_by_category %}
+  <!-- Category navigation -->
+  <div class="mb-4">
+    <div class="row">
+      <div class="col-12">
+        <nav>
+          <div class="nav nav-pills" id="nav-tab" role="tablist">
+            {% for category in categories %}
+              {% if resources_by_category.get(category) %}
+                <button class="nav-link {{ 'active' if loop.first else '' }}" 
+                        id="nav-{{ category|replace(' ', '-')|lower }}-tab" 
+                        data-bs-toggle="pill" 
+                        data-bs-target="#nav-{{ category|replace(' ', '-')|lower }}" 
+                        type="button" 
+                        role="tab">
+                  {{ category }} 
+                  <span class="badge bg-secondary ms-1">{{ resources_by_category[category]|length }}</span>
+                </button>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category content -->
+  <div class="tab-content" id="nav-tabContent">
+    {% for category in categories %}
+      {% if resources_by_category.get(category) %}
+        <div class="tab-pane fade {{ 'show active' if loop.first else '' }}" 
+             id="nav-{{ category|replace(' ', '-')|lower }}" 
+             role="tabpanel">
+          <h3 class="mb-3">
+            <i class="bi bi-folder"></i> {{ category }}
+          </h3>
+          <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for r in resources_by_category[category] %}
+            <div class="col">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    {% if r.type == 'download' %}
+                      <i class="bi bi-download text-success"></i>
+                    {% elif r.type == 'url' %}
+                      <i class="bi bi-link-45deg text-primary"></i>
+                    {% elif r.type == 'file_explorer' %}
+                      <i class="bi bi-folder text-warning"></i>
+                    {% endif %}
+                    {{ r.title }}
+                  </h5>
+                  <p class="card-text">{{ r.description }}</p>
+                  <small class="text-muted">
+                    <i class="bi bi-tag"></i> {{ r.type|title }}
+                    {% if r.dynamic %}
+                      <span class="badge bg-info ms-1">Dynamic</span>
+                    {% endif %}
+                  </small>
+                  <div class="mt-3">
+                    {% if r.dynamic %}
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="dyn{{ loop.index0 }}" placeholder="Value">
+                      <button class="btn btn-primary" onclick="openResource('{{ loop.index0 }}')">Go</button>
+                    </div>
+                    {% else %}
+                    {% if r.type == 'file_explorer' %}
+                    <a class="btn btn-success" href="{{ r.path }}" target="_blank">
+                      <i class="bi bi-folder"></i> Open Folder
+                    </a>
+                    {% else %}
+                    <a class="btn btn-primary" href="{{ r.type == 'download' and '/resources/' + r.path or r.path }}" target="_blank">
+                      {% if r.type == 'download' %}
+                        <i class="bi bi-download"></i> Download
+                      {% else %}
+                        <i class="bi bi-link-45deg"></i> Open
+                      {% endif %}
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for r in resources %}
+    <div class="col">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ r.title }}</h5>
+          <p class="card-text">{{ r.description }}</p>
+          {% if r.dynamic %}
+          <div class="input-group">
+            <input type="text" class="form-control" id="dyn{{ loop.index0 }}" placeholder="Value">
+            <button class="btn btn-primary" onclick="openResource('{{ loop.index0 }}')">Go</button>
+          </div>
+          {% else %}
+          {% if r.type == 'file_explorer' %}
+          <a class="btn btn-success" href="{{ r.path }}" target="_blank">
+            <i class="bi bi-folder"></i> Open Folder
+          </a>
+          {% else %}
+          <a class="btn btn-primary" href="{{ r.type == 'download' and '/resources/' + r.path or r.path }}" target="_blank">Open</a>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if resources|length == 0 %}
+    <p>No resources found.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+<script type="application/json" id="resourcesData">
+  {{ resources|tojson }}
+</script>
+<script>
+const RESOURCES = JSON.parse(document.getElementById('resourcesData').textContent);
+function openResource(i) {
+  const r = RESOURCES[i];
+  const val = document.getElementById('dyn' + i).value || '';
+  const path = r.path.replace('<DYNAMIC>', encodeURIComponent(val));
+  let url;
+  if (r.type === 'download') {
+    url = '/resources/' + path;
+  } else if (r.type === 'file_explorer') {
+    url = path; // File explorer URLs are used as-is
+  } else {
+    url = path; // Regular URLs
+  }
+  window.open(url, '_blank');
+}
+</script>
+{% endblock %}

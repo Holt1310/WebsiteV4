@@ -1,0 +1,1001 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<style>
+/* Annotation styles */
+.annotation-toolbar {
+  position: fixed;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  max-width: 300px;
+  display: none; /* Hidden by default */
+}
+
+.annotation-toolbar.show {
+  display: block;
+}
+
+.annotation-toggle-btn {
+  position: fixed;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 999;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.annotation-toggle-btn:hover {
+  background: #0056b3;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.annotation-toggle-btn.active {
+  background: #28a745;
+}
+
+.annotation-btn {
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+.post-content {
+  position: relative;
+  line-height: 1.8;
+  user-select: text;
+}
+
+.highlight {
+  background-color: rgba(255, 255, 0, 0.3);
+  cursor: pointer;
+  position: relative;
+  border-radius: 2px;
+  padding: 1px 2px;
+}
+
+.highlight:hover {
+  background-color: rgba(255, 255, 0, 0.5);
+}
+
+.highlight-green {
+  background-color: rgba(0, 255, 0, 0.3);
+}
+
+.highlight-green:hover {
+  background-color: rgba(0, 255, 0, 0.5);
+}
+
+.highlight-pink {
+  background-color: rgba(255, 192, 203, 0.3);
+}
+
+.highlight-pink:hover {
+  background-color: rgba(255, 192, 203, 0.5);
+}
+
+.highlight-blue {
+  background-color: rgba(173, 216, 230, 0.3);
+}
+
+.highlight-blue:hover {
+  background-color: rgba(173, 216, 230, 0.5);
+}
+
+.annotation-note {
+  position: absolute;
+  background: #fff3cd;
+  border: 2px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  width: 250px;
+  right: -270px; /* Position in right margin */
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+/* Arrow pointing from note to highlighted text */
+.annotation-note:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  transform: translateY(-50%);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 12px solid #ffeaa7;
+}
+
+.annotation-note:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  transform: translateY(-50%);
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 10px solid #fff3cd;
+}
+
+.highlight-mode {
+  cursor: crosshair !important;
+}
+
+.highlight-mode * {
+  cursor: crosshair !important;
+}
+
+.note-mode {
+  cursor: crosshair !important;
+}
+
+.note-mode * {
+  cursor: crosshair !important;
+}
+
+#annotationModal .modal-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.annotation-item {
+  border-left: 4px solid #007bff;
+  padding-left: 10px;
+}
+
+.annotation-item.highlight-annotation {
+  border-left-color: #ffc107;
+}
+
+.annotation-item.note-annotation {
+  border-left-color: #17a2b8;
+}
+
+/* Comment popup styles */
+.comment-toolbar {
+  position: fixed;
+  top: 50%;
+  right: 70px; /* Position next to annotation button */
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  max-width: 350px;
+  width: 350px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: none; /* Hidden by default */
+}
+
+.comment-toolbar.show {
+  display: block;
+}
+
+.comment-toggle-btn {
+  position: fixed;
+  top: calc(50% + 60px); /* Position below annotation button */
+  right: 10px;
+  transform: translateY(-50%);
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 999;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.comment-toggle-btn:hover {
+  background: #1e7e34;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.comment-toggle-btn.active {
+  background: #dc3545;
+}
+
+.comment-item {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.comment-form {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.comment-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  {% set back_link = request.args.get('back') or request.referrer or url_for('forum') %}
+  <h2 class="mb-0">{{ post.title }}</h2>
+  <a href="{{ back_link }}" class="btn btn-secondary">Back</a>
+</div>
+<div class="mb-3 text-muted">
+  {{ post.author }} - {{ post.created[:19].replace('T',' ') if post.created }}
+</div>
+
+<!-- Floating Annotation Toggle Button -->
+<button id="annotationToggleBtn" class="annotation-toggle-btn" onclick="toggleAnnotationToolbar()">
+  <i class="bi bi-pencil"></i>
+</button>
+
+<!-- Floating Comment Toggle Button -->
+<button id="commentToggleBtn" class="comment-toggle-btn" onclick="toggleCommentToolbar()">
+  <i class="bi bi-chat-dots"></i>
+</button>
+
+<!-- Annotation Toolbar (Hidden by default) -->
+<div id="annotationToolbar" class="annotation-toolbar">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="mb-0">Annotations</h6>
+    <button class="btn btn-sm btn-outline-secondary" onclick="toggleAnnotationToolbar()">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+  <div class="d-flex flex-wrap align-items-center mb-2">
+    <button id="highlightBtn" class="btn btn-outline-warning btn-sm annotation-btn" onclick="toggleAnnotationMode('highlight')">
+      <i class="bi bi-highlighter"></i> Highlight
+    </button>
+    <button id="noteBtn" class="btn btn-outline-info btn-sm annotation-btn" onclick="toggleAnnotationMode('note')">
+      <i class="bi bi-sticky"></i> Note
+    </button>
+  </div>
+  <div class="mb-2">
+    <select id="colorPicker" class="form-select form-select-sm">
+      <option value="#ffff00" data-class="highlight">Yellow</option>
+      <option value="#90EE90" data-class="highlight-green">Green</option>
+      <option value="#FFB6C1" data-class="highlight-pink">Pink</option>
+      <option value="#ADD8E6" data-class="highlight-blue">Blue</option>
+    </select>
+  </div>
+  <div class="d-grid gap-2">
+    <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#annotationModal">
+      <i class="bi bi-list"></i> View All
+    </button>
+  </div>
+  <div class="small text-muted mt-2">
+    <strong>Highlight:</strong> Select text. <strong>Note:</strong> Click in post.
+  </div>
+</div>
+
+<!-- Comment Toolbar (Hidden by default) -->
+<div id="commentToolbar" class="comment-toolbar">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="mb-0">Comments ({{ comments|length }})</h6>
+    <button class="btn btn-sm btn-outline-secondary" onclick="toggleCommentToolbar()">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+  
+  <!-- Comment Form -->
+  <div class="comment-form">
+    <h6 class="mb-2">Add Comment</h6>
+    <form method="post" id="commentForm">
+      <div class="mb-2">
+        <input type="text" class="form-control form-control-sm" name="name" placeholder="Your name" required>
+      </div>
+      <div class="mb-2">
+        <textarea class="form-control form-control-sm" name="comment" placeholder="Add a comment" rows="3" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm w-100">Post Comment</button>
+    </form>
+  </div>
+  
+  <!-- Comments List -->
+  <div class="comment-list">
+    <h6 class="mb-2 mt-3">All Comments</h6>
+    {% if comments %}
+      {% for c in comments %}
+      <div class="comment-item">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1">
+            <strong>{{ c.name }}</strong>
+            <small class="text-muted d-block">{{ c.created[:19].replace('T',' ') if c.created else 'Unknown time' }}</small>
+            <p class="mb-0 mt-1">{{ c.text }}</p>
+          </div>
+          {% if session.get('logged_in') and c.get('id') %}
+          <form method="post" action="{{ url_for('delete_comment', post_index=index, comment_id=c.id) }}" 
+                onsubmit="return confirm('Delete this comment?');" class="ms-2">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete comment">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No comments yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Post Content with Annotation Support -->
+<div class="post-content-wrapper position-relative" style="margin-right: 280px; overflow: visible;">
+  <div class="post-content mb-4" id="postContent">{{ post.content|safe }}</div>
+</div>
+
+{% if post.attachments %}
+<ul class="mb-4">
+  {% for a in post.attachments %}
+  {% if a not in post.get('embedded', []) %}
+  <li>
+    {% if a.lower().endswith(('png','jpg','jpeg','gif')) %}
+    <img src="/uploads/{{ a }}" class="img-fluid" alt="{{ a }}">
+    {% else %}
+    <a href="/uploads/{{ a }}" target="_blank">{{ a }}</a>
+    {% endif %}
+  </li>
+  {% endif %}
+  {% endfor %}
+</ul>
+{% endif %}
+
+<!-- Annotation Modal -->
+<div class="modal fade" id="annotationModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Annotations & Highlights</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="annotationList">
+          <p class="text-muted">Loading annotations...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Annotation system variables
+var currentAnnotationMode = null;
+var postIndex = parseInt('{{ index }}');
+var annotations = [];
+var highlightCounter = 0;
+
+// Initialize annotation system
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Initializing annotation system for post', postIndex);
+  setupEventListeners();
+  
+  // Load annotations after a short delay to ensure DOM is fully ready
+  setTimeout(function() {
+    loadAnnotations();
+  }, 100);
+});
+
+function setupEventListeners() {
+  // Text selection for highlights
+  document.addEventListener('mouseup', handleTextSelection);
+  
+  // Click for notes
+  document.getElementById('postContent').addEventListener('click', handleNoteClick);
+}
+
+function toggleAnnotationToolbar() {
+  var toolbar = document.getElementById('annotationToolbar');
+  var toggleBtn = document.getElementById('annotationToggleBtn');
+  
+  if (toolbar.classList.contains('show')) {
+    toolbar.classList.remove('show');
+    toggleBtn.classList.remove('active');
+    clearAnnotationMode(); // Clear any active mode when closing
+  } else {
+    toolbar.classList.add('show');
+    toggleBtn.classList.add('active');
+  }
+}
+
+function toggleAnnotationMode(mode) {
+  // Clear previous mode first
+  clearAnnotationMode();
+  
+  // Set new mode
+  currentAnnotationMode = mode;
+  console.log('Setting annotation mode to:', mode);
+  
+  // Update button appearances
+  var targetBtn = document.getElementById(mode + 'Btn');
+  if (targetBtn) {
+    targetBtn.classList.add('active');
+    // Make button solid instead of outline when active
+    if (mode === 'highlight') {
+      targetBtn.classList.remove('btn-outline-warning');
+      targetBtn.classList.add('btn-warning');
+    } else if (mode === 'note') {
+      targetBtn.classList.remove('btn-outline-info');
+      targetBtn.classList.add('btn-info');
+    }
+  }
+  
+  // Update wrapper classes for cursor changes
+  var wrapper = document.querySelector('.post-content-wrapper');
+  if (mode === 'highlight') {
+    wrapper.classList.add('highlight-mode');
+  } else if (mode === 'note') {
+    wrapper.classList.add('note-mode');
+  }
+  
+  console.log('Annotation mode set to:', currentAnnotationMode);
+}
+
+function clearAnnotationMode() {
+  console.log('Clearing annotation mode, current mode:', currentAnnotationMode);
+  currentAnnotationMode = null;
+  
+  // Force remove active class from specific buttons
+  var highlightBtn = document.getElementById('highlightBtn');
+  var noteBtn = document.getElementById('noteBtn');
+  
+  if (highlightBtn) {
+    highlightBtn.classList.remove('active');
+    highlightBtn.classList.remove('btn-warning');
+    highlightBtn.classList.add('btn-outline-warning');
+  }
+  if (noteBtn) {
+    noteBtn.classList.remove('active');
+    noteBtn.classList.remove('btn-info');
+    noteBtn.classList.add('btn-outline-info');
+  }
+  
+  // Force remove from all annotation buttons
+  document.querySelectorAll('.annotation-btn').forEach(function(btn) {
+    btn.classList.remove('active');
+    // Reset button styles to outline versions
+    if (btn.classList.contains('btn-warning')) {
+      btn.classList.remove('btn-warning');
+      btn.classList.add('btn-outline-warning');
+    }
+    if (btn.classList.contains('btn-info')) {
+      btn.classList.remove('btn-info');
+      btn.classList.add('btn-outline-info');
+    }
+  });
+  
+  // Remove mode classes from wrapper
+  var wrapper = document.querySelector('.post-content-wrapper');
+  if (wrapper) {
+    wrapper.classList.remove('highlight-mode', 'note-mode');
+    wrapper.style.cursor = 'auto';
+  }
+  
+  // Reset cursor on post content and all child elements
+  var postContent = document.getElementById('postContent');
+  if (postContent) {
+    postContent.style.cursor = 'auto';
+    // Reset cursor on all child elements
+    var allElements = postContent.querySelectorAll('*');
+    allElements.forEach(function(el) {
+      el.style.cursor = 'auto';
+    });
+  }
+  
+  // Reset body cursor as well
+  document.body.style.cursor = 'auto';
+  
+  // Force refresh the UI state
+  setTimeout(function() {
+    console.log('Clear mode completed - currentAnnotationMode:', currentAnnotationMode);
+  }, 10);
+}
+
+function handleTextSelection(e) {
+  if (currentAnnotationMode !== 'highlight') return;
+  
+  var selection = window.getSelection();
+  var selectedText = selection.toString().trim();
+  
+  if (selectedText && selection.rangeCount > 0) {
+    var range = selection.getRangeAt(0);
+    
+    // Check if selection is within post content
+    var postContent = document.getElementById('postContent');
+    if (!postContent.contains(range.commonAncestorContainer)) {
+      return;
+    }
+    
+    // Create highlight
+    var highlightSpan = document.createElement('span');
+    var colorSelect = document.getElementById('colorPicker');
+    var selectedOption = colorSelect.options[colorSelect.selectedIndex];
+    var colorClass = selectedOption.getAttribute('data-class');
+    
+    highlightSpan.className = 'highlight ' + colorClass;
+    highlightSpan.setAttribute('data-highlight-id', 'hl_' + (++highlightCounter));
+    highlightSpan.title = 'Highlighted by ' + getCurrentUser();
+    
+    try {
+      range.surroundContents(highlightSpan);
+      
+      // Add delete button to new highlight
+      if (getCurrentUser() && (getCurrentUser() !== 'Anonymous' || isAdmin())) {
+        addDeleteButtonToHighlight(highlightSpan, 'hl_' + highlightCounter);
+      }
+      
+      // Save annotation
+      var annotation = {
+        type: 'highlight',
+        data: selectedText,
+        position: {
+          highlightId: highlightSpan.getAttribute('data-highlight-id'),
+          text: selectedText
+        },
+        color: colorSelect.value,
+        colorClass: colorClass
+      };
+      
+      saveAnnotation(annotation);
+      selection.removeAllRanges();
+      
+    } catch (error) {
+      console.error('Error creating highlight:', error);
+      alert('Could not highlight this selection. Try selecting simpler text.');
+    }
+  }
+}
+
+function handleNoteClick(e) {
+  if (currentAnnotationMode !== 'note') return;
+  
+  e.preventDefault();
+  e.stopPropagation();
+  
+  var noteText = prompt('Enter your note:');
+  if (!noteText || !noteText.trim()) return;
+  
+  // Get the clicked element and position
+  var targetElement = e.target;
+  var clickedText = '';
+  
+  // Try to get some context text around the click position
+  if (targetElement.nodeType === Node.TEXT_NODE || targetElement.textContent) {
+    clickedText = targetElement.textContent || targetElement.innerText || '';
+    // Take first few words as context
+    var words = clickedText.trim().split(/\s+/);
+    clickedText = words.slice(0, 3).join(' ') + (words.length > 3 ? '...' : '');
+  }
+  
+  // Create a small highlight marker at the click position
+  var highlightId = 'note_hl_' + Date.now();
+  
+  // Insert a small highlight span at click position if possible
+  if (targetElement.nodeType === Node.TEXT_NODE) {
+    var range = document.createRange();
+    var textNode = targetElement;
+    
+    // Create a small highlight around the click position
+    var textLength = textNode.textContent.length;
+    var startOffset = Math.max(0, Math.floor(textLength * 0.4));
+    var endOffset = Math.min(textLength, Math.floor(textLength * 0.6));
+    
+    if (startOffset < endOffset) {
+      range.setStart(textNode, startOffset);
+      range.setEnd(textNode, endOffset);
+      
+      var highlightSpan = document.createElement('span');
+      highlightSpan.className = 'highlight highlight-yellow';
+      highlightSpan.setAttribute('data-highlight-id', highlightId);
+      highlightSpan.title = 'Note: ' + noteText.substring(0, 50) + (noteText.length > 50 ? '...' : '');
+      
+      try {
+        range.surroundContents(highlightSpan);
+      } catch (error) {
+        console.log('Could not create highlight, using click position only');
+      }
+    }
+  }
+  
+  var rect = document.getElementById('postContent').getBoundingClientRect();
+  var position = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+    relativeX: (e.clientX - rect.left) / rect.width,
+    relativeY: (e.clientY - rect.top) / rect.height,
+    highlightId: highlightId,
+    contextText: clickedText
+  };
+  
+  var annotation = {
+    type: 'note',
+    data: noteText.trim(),
+    position: position,
+    color: '#fff3cd'
+  };
+  
+  saveAnnotation(annotation);
+}
+
+function saveAnnotation(annotationData) {
+  fetch('/post-annotations/' + postIndex, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ annotation: annotationData })
+  })
+  .then(function(response) { return response.json(); })
+  .then(function(data) {
+    if (data.success) {
+      annotations.push(data.annotation);
+      if (data.annotation.type === 'note') {
+        displayNote(data.annotation);
+      }
+      updateAnnotationList();
+    } else {
+      alert('Error saving annotation: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(function(error) {
+    console.error('Error saving annotation:', error);
+    alert('Error saving annotation');
+  });
+}
+
+function loadAnnotations() {
+  console.log('Loading annotations for post', postIndex);
+  
+  fetch('/post-annotations/' + postIndex)
+    .then(function(response) { 
+      if (!response.ok) {
+        throw new Error('Failed to load annotations');
+      }
+      return response.json(); 
+    })
+    .then(function(data) {
+      console.log('Loaded annotations:', data);
+      annotations = data.annotations || [];
+      
+      // Clear any existing annotation displays first
+      clearExistingAnnotationDisplays();
+      
+      // Display all annotations
+      displayAllAnnotations();
+      updateAnnotationList();
+      
+      console.log('Displayed', annotations.length, 'annotations');
+    })
+    .catch(function(error) {
+      console.error('Error loading annotations:', error);
+      // Initialize empty if loading fails
+      annotations = [];
+      updateAnnotationList();
+    });
+}
+
+function clearExistingAnnotationDisplays() {
+  // Remove existing note elements
+  var existingNotes = document.querySelectorAll('.annotation-note');
+  existingNotes.forEach(function(note) {
+    note.remove();
+  });
+  
+  // Remove existing highlights (but be careful not to remove new ones)
+  var existingHighlights = document.querySelectorAll('.highlight[data-highlight-id]');
+  existingHighlights.forEach(function(highlight) {
+    var highlightId = highlight.getAttribute('data-highlight-id');
+    if (highlightId && (highlightId.startsWith('hl_') || highlightId.startsWith('note_hl_') || highlightId.startsWith('restored_'))) {
+      var parent = highlight.parentNode;
+      parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+      parent.normalize();
+    }
+  });
+}
+
+function displayAllAnnotations() {
+  annotations.forEach(function(annotation) {
+    if (annotation.type === 'note') {
+      displayNote(annotation);
+    } else if (annotation.type === 'highlight') {
+      restoreHighlight(annotation);
+    }
+  });
+}
+
+function restoreHighlight(annotation) {
+  // Try to find and restore the highlight based on the saved text and position
+  var postContent = document.getElementById('postContent');
+  var textToFind = annotation.data;
+  
+  if (!textToFind || textToFind.trim() === '') {
+    console.log('No text to highlight for annotation:', annotation.id);
+    return;
+  }
+  
+  // Function to search and highlight text in text nodes
+  function highlightTextInNode(node, searchText, annotation) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      var text = node.textContent;
+      var index = text.toLowerCase().indexOf(searchText.toLowerCase());
+      
+      if (index !== -1) {
+        // Found the text, create highlight
+        var range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + searchText.length);
+        
+        var highlightSpan = document.createElement('span');
+        highlightSpan.className = 'highlight ' + (annotation.colorClass || 'highlight');
+        highlightSpan.setAttribute('data-highlight-id', annotation.position.highlightId || 'restored_' + annotation.id);
+        highlightSpan.setAttribute('data-annotation-id', annotation.id);
+        highlightSpan.title = 'Highlighted by ' + annotation.author;
+        highlightSpan.style.position = 'relative';
+        
+        try {
+          range.surroundContents(highlightSpan);
+          
+          // Add small delete button to highlight if user can delete
+          if (getCurrentUser() === annotation.author || isAdmin()) {
+            addDeleteButtonToHighlight(highlightSpan, annotation.id);
+          }
+          
+          return true; // Successfully highlighted
+        } catch (error) {
+          console.log('Could not restore highlight:', error);
+        }
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Skip already highlighted elements
+      if (node.classList && node.classList.contains('highlight')) {
+        return false;
+      }
+      
+      // Search in child nodes
+      var childNodes = Array.from(node.childNodes);
+      for (var i = 0; i < childNodes.length; i++) {
+        if (highlightTextInNode(childNodes[i], searchText, annotation)) {
+          return true; // Found and highlighted
+        }
+      }
+    }
+    return false;
+  }
+  
+  // Try to restore the highlight
+  if (!highlightTextInNode(postContent, textToFind, annotation)) {
+    console.log('Could not restore highlight for text:', textToFind);
+  }
+}
+
+function addDeleteButtonToHighlight(highlightElement, annotationId) {
+  var deleteBtn = document.createElement('span');
+  deleteBtn.innerHTML = '&times;';
+  deleteBtn.className = 'highlight-delete-btn';
+  deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; line-height: 16px; text-align: center; cursor: pointer; display: none; z-index: 300;';
+  deleteBtn.title = 'Delete highlight';
+  deleteBtn.onclick = function(e) {
+    e.stopPropagation();
+    deleteAnnotation(annotationId);
+  };
+  
+  highlightElement.appendChild(deleteBtn);
+  
+  // Show delete button on hover
+  highlightElement.addEventListener('mouseenter', function() {
+    deleteBtn.style.display = 'block';
+  });
+  
+  highlightElement.addEventListener('mouseleave', function() {
+    deleteBtn.style.display = 'none';
+  });
+}
+
+function displayNote(annotation) {
+  var postContent = document.getElementById('postContent');
+  
+  var noteElement = document.createElement('div');
+  noteElement.className = 'annotation-note';
+  noteElement.setAttribute('data-annotation-id', annotation.id);
+  
+  var deleteButton = '';
+  if (getCurrentUser() === annotation.author || isAdmin()) {
+    deleteButton = '<button class="btn btn-sm btn-outline-danger mt-1 w-100" onclick="deleteAnnotation(\'' + annotation.id + '\')"><i class="bi bi-trash"></i> Delete</button>';
+  }
+  
+  // Add a small X button in the top-right corner
+  var quickDeleteBtn = '';
+  if (getCurrentUser() === annotation.author || isAdmin()) {
+    quickDeleteBtn = '<button class="btn btn-sm btn-link text-danger p-0 position-absolute" style="top: 5px; right: 5px; font-size: 12px; line-height: 1;" onclick="deleteAnnotation(\'' + annotation.id + '\'); event.stopPropagation();" title="Delete annotation">&times;</button>';
+  }
+  
+  noteElement.innerHTML = 
+    quickDeleteBtn +
+    '<div><strong>Note by ' + annotation.author + ':</strong></div>' +
+    '<div>' + annotation.data + '</div>' +
+    '<small class="text-muted">' + new Date(annotation.created).toLocaleString() + '</small>' +
+    deleteButton;
+  
+  // Position the note in the right margin, aligned with the click position
+  // The note will be positioned to the right of the content area
+  var topPosition = annotation.position.y || (annotation.position.relativeY * postContent.offsetHeight);
+  noteElement.style.top = topPosition + 'px';
+  
+  document.querySelector('.post-content-wrapper').appendChild(noteElement);
+}
+
+function updateAnnotationList() {
+  var listContainer = document.getElementById('annotationList');
+  
+  if (annotations.length === 0) {
+    listContainer.innerHTML = '<p class="text-muted">No annotations yet.</p>';
+    return;
+  }
+  
+  // Sort annotations by creation date
+  var sortedAnnotations = annotations.slice().sort(function(a, b) {
+    return new Date(b.created) - new Date(a.created);
+  });
+  
+  var html = '';
+  sortedAnnotations.forEach(function(annotation) {
+    var date = new Date(annotation.created).toLocaleString();
+    var typeClass = annotation.type === 'highlight' ? 'highlight-annotation' : 'note-annotation';
+    var typeIcon = annotation.type === 'highlight' ? 'highlighter' : 'sticky';
+    
+    var deleteButton = '';
+    if (getCurrentUser() === annotation.author || isAdmin()) {
+      deleteButton = '<button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteAnnotation(\'' + annotation.id + '\')"><i class="bi bi-trash"></i></button>';
+    }
+    
+    html += 
+      '<div class="annotation-item ' + typeClass + ' border rounded p-3 mb-3">' +
+        '<div class="d-flex justify-content-between align-items-start">' +
+          '<div class="flex-grow-1">' +
+            '<div class="d-flex align-items-center mb-2">' +
+              '<i class="bi bi-' + typeIcon + ' me-2"></i>' +
+              '<strong>' + annotation.type.charAt(0).toUpperCase() + annotation.type.slice(1) + '</strong>' +
+              '<small class="text-muted ms-2">by ' + annotation.author + ' on ' + date + '</small>' +
+            '</div>' +
+            '<div class="annotation-content">' + annotation.data + '</div>' +
+          '</div>' +
+          deleteButton +
+        '</div>' +
+      '</div>';
+  });
+  
+  listContainer.innerHTML = html;
+}
+
+function deleteAnnotation(annotationId) {
+  fetch('/post-annotations/' + postIndex, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ annotation_id: annotationId })
+  })
+  .then(function(response) { return response.json(); })
+  .then(function(data) {
+    if (data.success) {
+      annotations = data.annotations;
+      
+      // Remove note elements from DOM
+      var noteElement = document.querySelector('[data-annotation-id="' + annotationId + '"]');
+      if (noteElement) {
+        noteElement.remove();
+      }
+      
+      // Remove highlight elements from DOM but restore the text
+      var highlightElement = document.querySelector('[data-annotation-id="' + annotationId + '"]');
+      if (!highlightElement) {
+        // Try alternative selectors for highlights
+        highlightElement = document.querySelector('[data-highlight-id*="' + annotationId + '"]');
+      }
+      
+      if (highlightElement && highlightElement.classList.contains('highlight')) {
+        // Get the text content before removing
+        var textContent = highlightElement.textContent;
+        var parent = highlightElement.parentNode;
+        
+        // Replace the highlighted span with a plain text node
+        var textNode = document.createTextNode(textContent);
+        parent.replaceChild(textNode, highlightElement);
+        
+        // Normalize the parent to merge adjacent text nodes
+        parent.normalize();
+      }
+      
+      updateAnnotationList();
+    } else {
+      alert('Error deleting annotation: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(function(error) {
+    console.error('Error deleting annotation:', error);
+    alert('Error deleting annotation');
+  });
+}
+
+function getCurrentUser() {
+  return '{{ session.get("username", "Anonymous") }}';
+}
+
+function isAdmin() {
+  var isLoggedIn = '{{ session.get("logged_in", "") }}';
+  return isLoggedIn === 'True' || isLoggedIn === 'true';
+}
+
+// Comment toolbar functions
+function toggleCommentToolbar() {
+  var toolbar = document.getElementById('commentToolbar');
+  var toggleBtn = document.getElementById('commentToggleBtn');
+  
+  if (toolbar.classList.contains('show')) {
+    toolbar.classList.remove('show');
+    toggleBtn.classList.remove('active');
+  } else {
+    toolbar.classList.add('show');
+    toggleBtn.classList.add('active');
+  }
+}
+
+// Initialize comment system
+document.addEventListener('DOMContentLoaded', function() {
+  // Setup comment form submission
+  var commentForm = document.getElementById('commentForm');
+  if (commentForm) {
+    commentForm.addEventListener('submit', function(e) {
+      // Let the form submit normally - the page will reload with the new comment
+      // The popup state will be reset, which is fine
+    });
+  }
+});
+
+// Close comment toolbar when clicking outside
+document.addEventListener('click', function(e) {
+  var commentToolbar = document.getElementById('commentToolbar');
+  var commentToggleBtn = document.getElementById('commentToggleBtn');
+  
+  // Don't close if clicking on toolbar or toggle button
+  if (!e.target.closest('#commentToolbar') && 
+      !e.target.closest('#commentToggleBtn') &&
+      !e.target.closest('#annotationToolbar') && 
+      !e.target.closest('#annotationToggleBtn') && 
+      !e.target.closest('.post-content-wrapper') &&
+      !e.target.closest('#annotationModal')) {
+    
+    // Close comment toolbar if open
+    if (commentToolbar && commentToolbar.classList.contains('show')) {
+      commentToolbar.classList.remove('show');
+      commentToggleBtn.classList.remove('active');
+    }
+    
+    // Only clear annotation mode, don't close toolbar unless specifically requested
+    if (currentAnnotationMode) {
+      clearAnnotationMode();
+    }
+  }
+});
+</script>
+{% endblock %}

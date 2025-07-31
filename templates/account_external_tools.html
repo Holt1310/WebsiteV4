@@ -1,0 +1,344 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-tools"></i> My External Tools</h4>
+      </div>
+      <div class="card-body">
+        
+        <!-- Success/Error Messages -->
+        {% if error %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endif %}
+        
+        {% if success %}
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ success }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endif %}
+
+        <!-- Tools Overview -->
+        <div class="mb-4">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card border-info">
+                <div class="card-body text-center">
+                  <h3 class="text-info">{{ current_count }}</h3>
+                  <p class="mb-0">Active Tools</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body text-center">
+                  <h3 class="text-secondary">{{ max_tools - current_count }}</h3>
+                  <p class="mb-0">Available Slots</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Tools List -->
+        <div class="mb-4">
+          <h5 class="text-primary border-bottom pb-2">
+            <i class="bi bi-list"></i> Your Tools
+          </h5>
+          
+          {% if user_tools %}
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Path/URL</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for tool in user_tools %}
+                  <tr>
+                    <td>
+                      {% if tool.icon %}<i class="{{ tool.icon }}"></i>{% endif %}
+                      {{ tool.name }}
+                      {% if tool.description %}
+                        <br><small class="text-muted">{{ tool.description }}</small>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge bg-info">{{ tool.type }}</span>
+                    </td>
+                    <td>
+                      <small class="text-muted">
+                        {% if tool.type == 'website' %}
+                          {{ tool.website_url or 'No URL' }}
+                        {% else %}
+                          {{ tool.executable_path or 'No path' }}
+                        {% endif %}
+                      </small>
+                    </td>
+                    <td>
+                      {% if tool.is_enabled %}
+                        <span class="badge bg-success">Enabled</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Disabled</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <form method="POST" class="d-inline">
+                        <input type="hidden" name="action" value="toggle_tool">
+                        <input type="hidden" name="tool_id" value="{{ tool.tool_id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Toggle Status">
+                          {% if tool.is_enabled %}Disable{% else %}Enable{% endif %}
+                        </button>
+                      </form>
+                      
+                      <button type="button" class="btn btn-sm btn-outline-secondary edit-tool-btn" 
+                              data-tool-id="{{ tool.tool_id }}"
+                              data-name="{{ tool.name }}"
+                              data-description="{{ tool.description }}"
+                              data-icon="{{ tool.icon }}"
+                              data-type="{{ tool.type }}"
+                              data-executable-path="{{ tool.executable_path }}"
+                              data-website-url="{{ tool.website_url }}"
+                              data-parameters="{{ tool.parameters }}"
+                              data-enabled="{{ tool.is_enabled }}"
+                              title="Edit">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      
+                      <form method="POST" class="d-inline">
+                        <input type="hidden" name="action" value="delete_tool">
+                        <input type="hidden" name="tool_id" value="{{ tool.tool_id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                onclick="return confirm('Delete tool {{ tool.name }}?')" title="Delete">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-tools" style="font-size: 3rem;"></i>
+              <h5>No Tools Configured</h5>
+              <p>Add your first external tool to get started.</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Add/Edit Tool Form -->
+        {% if current_count < max_tools %}
+        <div class="mb-4">
+          <h5 class="text-primary border-bottom pb-2">
+            <i class="bi bi-plus-circle"></i> Add New Tool
+          </h5>
+          
+          <form method="POST" class="needs-validation" novalidate id="toolForm">
+            <input type="hidden" name="action" value="add_tool" id="formAction">
+            <input type="hidden" name="tool_id" id="editToolId">
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Tool ID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="tool_id" id="toolId" required 
+                         pattern="[a-zA-Z0-9_]+" title="Only letters, numbers, and underscores">
+                  <div class="form-text">Unique identifier (letters, numbers, underscores only)</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Tool Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="name" id="toolName" required>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="description" id="toolDescription" rows="2"></textarea>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">Icon (Bootstrap Icons)</label>
+                  <input type="text" class="form-control" name="icon" id="toolIcon" 
+                         value="bi bi-gear" placeholder="bi bi-gear">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">Tool Type <span class="text-danger">*</span></label>
+                  <select class="form-control" name="type" id="toolType" required onchange="toggleUserToolFields(this.value)">
+                    <option value="executable">Executable</option>
+                    <option value="script">Script</option>
+                    <option value="website">Website</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_enabled" id="toolEnabled" checked>
+                    <label class="form-check-label">Enabled</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3" id="user_executable_field">
+              <label class="form-label">Executable Path</label>
+              <input type="text" class="form-control" name="executable_path" id="toolExecutablePath"
+                     placeholder="C:\path\to\executable.exe">
+              <div class="form-text">Full path to executable file</div>
+            </div>
+            
+            <div class="mb-3" id="user_website_field" style="display: none;">
+              <label class="form-label">Website URL</label>
+              <input type="url" class="form-control" name="website_url" id="toolWebsiteUrl"
+                     placeholder="https://example.com">
+              <div class="form-text">Full URL including http:// or https://</div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Parameters (optional)</label>
+              <input type="text" class="form-control" name="parameters" id="toolParameters"
+                     placeholder="Additional parameters">
+              <div class="form-text">Extra command line parameters or configuration</div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" id="submitButton">
+              <i class="bi bi-plus-circle"></i> Add Tool
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="resetForm()" id="cancelButton" style="display: none;">
+              Cancel
+            </button>
+          </form>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+          You have reached the maximum limit of {{ max_tools }} tools. 
+          Delete some tools to add new ones.
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleUserToolFields(type) {
+  const executableField = document.getElementById('user_executable_field');
+  const websiteField = document.getElementById('user_website_field');
+  
+  if (type === 'website') {
+    executableField.style.display = 'none';
+    websiteField.style.display = 'block';
+  } else {
+    executableField.style.display = 'block';
+    websiteField.style.display = 'none';
+  }
+}
+
+function editTool(button) {
+  // Get data from button attributes
+  const toolId = button.dataset.toolId;
+  const name = button.dataset.name;
+  const description = button.dataset.description;
+  const icon = button.dataset.icon;
+  const type = button.dataset.type;
+  const executablePath = button.dataset.executablePath;
+  const websiteUrl = button.dataset.websiteUrl;
+  const parameters = button.dataset.parameters;
+  const isEnabled = button.dataset.enabled === 'True';
+  
+  // Switch to edit mode
+  document.getElementById('formAction').value = 'update_tool';
+  document.getElementById('editToolId').value = toolId;
+  
+  // Fill form fields
+  document.getElementById('toolId').value = toolId;
+  document.getElementById('toolId').readOnly = true;
+  document.getElementById('toolName').value = name;
+  document.getElementById('toolDescription').value = description || '';
+  document.getElementById('toolIcon').value = icon || 'bi bi-gear';
+  document.getElementById('toolType').value = type;
+  document.getElementById('toolExecutablePath').value = executablePath || '';
+  document.getElementById('toolWebsiteUrl').value = websiteUrl || '';
+  document.getElementById('toolParameters').value = parameters || '';
+  document.getElementById('toolEnabled').checked = isEnabled;
+  
+  // Update UI
+  document.getElementById('submitButton').innerHTML = '<i class="bi bi-pencil"></i> Update Tool';
+  document.getElementById('cancelButton').style.display = 'inline-block';
+  
+  // Toggle fields based on type
+  toggleUserToolFields(type);
+  
+  // Scroll to form
+  document.getElementById('toolForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetForm() {
+  // Reset to add mode
+  document.getElementById('formAction').value = 'add_tool';
+  document.getElementById('editToolId').value = '';
+  
+  // Clear form
+  document.getElementById('toolForm').reset();
+  document.getElementById('toolId').readOnly = false;
+  document.getElementById('toolIcon').value = 'bi bi-gear';
+  document.getElementById('toolEnabled').checked = true;
+  
+  // Update UI
+  document.getElementById('submitButton').innerHTML = '<i class="bi bi-plus-circle"></i> Add Tool';
+  document.getElementById('cancelButton').style.display = 'none';
+  
+  // Show executable field by default
+  toggleUserToolFields('executable');
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Add click listeners to edit buttons
+  document.querySelectorAll('.edit-tool-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      editTool(this);
+    });
+  });
+});
+
+// Bootstrap form validation
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    var forms = document.getElementsByClassName('needs-validation');
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+{% endblock %}

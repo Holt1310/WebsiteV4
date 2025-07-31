@@ -1,0 +1,642 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<style>
+.resource-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.resource-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.resource-card .card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.resource-card .mt-auto {
+  margin-top: auto !important;
+}
+#categoryResourcesSection {
+  transition: all 0.3s ease;
+}
+</style>
+
+<div class="row">
+  <div class="col-md-3 mb-3">
+    <input type="text" class="form-control mb-3" id="searchInput" placeholder="Search posts..." value="{{ search_query or '' }}">
+    
+    <!-- Sort and Filter Controls -->
+    <div class="mb-3">
+      <label for="sortSelect" class="form-label">Sort by:</label>
+      <select class="form-select" id="sortSelect" onchange="updateSortAndFilter()">
+        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+        <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title A-Z</option>
+      </select>
+    </div>
+    
+    <div class="mb-3">
+      <label for="perPageSelect" class="form-label">Posts per page:</label>
+      <select class="form-select" id="perPageSelect" onchange="updateSortAndFilter()">
+        <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+      </select>
+    </div>
+    
+    {% if tags %}
+    <div class="mb-3">
+      <h6>Filter by tags:</h6>
+      {% for t in tags %}
+      <div class="form-check">
+        <input class="form-check-input tag-filter" type="checkbox" value="{{ t }}" id="tag{{ loop.index }}" {% if tag_filters and t in tag_filters.split(',') %}checked{% endif %}>
+        <label class="form-check-label" for="tag{{ loop.index }}">{{ t }}</label>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <ul class="nav nav-pills flex-column" id="catTabs" role="tablist">
+      {% for c in categories %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {% if loop.first %}active{% endif %}" data-category="{{ c }}" id="tab{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#pane{{ loop.index }}" type="button" role="tab" onclick="updateCategoryFilter('{{ c }}')">{{ c }}</button>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="col-md-9">
+    <!-- Pagination info for All Posts tab -->
+    <div id="allPostsPaginationInfo" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">
+          Showing {{ ((pagination.page - 1) * pagination.per_page + 1) }} to {{ ((pagination.page - 1) * pagination.per_page + posts_by_cat['All Posts']|length) }} of {{ pagination.total_posts }} posts
+        </span>
+      </div>
+    </div>
+    
+    <!-- Category Resources Section -->
+    <div id="categoryResourcesSection" class="mb-4">
+      {% if category_resources %}
+      <div class="card border-primary">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-folder"></i> 
+            {% if category_filter == 'all' %}
+              General Resources
+            {% else %}
+              {{ category_filter }} Resources
+            {% endif %}
+            <span class="badge bg-light text-dark ms-2">{{ category_resources|length }}</span>
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            {% for resource in category_resources %}
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="card h-100 border-0 shadow-sm resource-card">
+                <div class="card-body">
+                  <h6 class="card-title">
+                    {% if resource.type == 'download' %}
+                      <i class="bi bi-download text-success"></i>
+                    {% elif resource.type == 'url' %}
+                      <i class="bi bi-link-45deg text-primary"></i>
+                    {% elif resource.type == 'file_explorer' %}
+                      <i class="bi bi-folder text-warning"></i>
+                    {% endif %}
+                    {{ resource.title }}
+                    {% if resource.dynamic %}
+                      <span class="badge bg-info ms-1" style="font-size: 0.7em;">Dynamic</span>
+                    {% endif %}
+                  </h6>
+                  {% if resource.description %}
+                    <p class="card-text small text-muted">{{ resource.description }}</p>
+                  {% endif %}
+                  <div class="mt-auto">
+                    {% if resource.dynamic %}
+                      <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="dynRes{{ loop.index0 }}" placeholder="Enter value...">
+                        <button class="btn btn-outline-primary btn-sm" data-resource-index="{{ loop.index0 }}" onclick="openDynamicResource(this.getAttribute('data-resource-index'))">
+                          <i class="bi bi-arrow-right"></i>
+                        </button>
+                      </div>
+                    {% else %}
+                      {% if resource.type == 'download' %}
+                        <a href="{{ url_for('resources', filename=resource.path) }}" 
+                           class="btn btn-success btn-sm" 
+                           download="{{ resource.path }}">
+                          <i class="bi bi-download"></i> Download
+                        </a>
+                      {% elif resource.type == 'url' %}
+                        <a href="{{ resource.path }}" 
+                           class="btn btn-primary btn-sm" 
+                           target="_blank" 
+                           rel="noopener noreferrer">
+                          <i class="bi bi-link-45deg"></i> Open
+                        </a>
+                      {% elif resource.type == 'file_explorer' %}
+                        <a href="{{ resource.path }}" 
+                           class="btn btn-warning btn-sm">
+                          <i class="bi bi-folder"></i> Open
+                        </a>
+                      {% endif %}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% if category_filter != 'all' and category_resources|length == 0 %}
+          <div class="text-center text-muted py-3">
+            <i class="bi bi-folder-x" style="font-size: 2rem;"></i>
+            <p class="mt-2">No resources available for this category.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="tab-content" id="catContent">
+      {% for c in categories %}
+      <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="pane{{ loop.index }}" role="tabpanel">
+        {% set cat_posts = posts_by_cat.get(c, []) %}
+        {% for item in cat_posts %}
+        {% set post = item.post %}
+        <div class="card mb-4 post" data-tags="{{ post.tags|join(',') }}">
+          <div class="card-body">
+            <h4 class="card-title">{{ post.title }}{% if post.locked %} <span class="badge bg-secondary">Locked</span>{% endif %}</h4>
+            <div class="card-text">
+              {{ post.content|striptags|truncate(131) }}
+              {% if post.content|striptags|length > 131 %}
+              <a class="with-back" href="/post/{{ item.index }}">Read more</a>
+              {% endif %}
+            </div>
+            {% if post.tags %}
+            <p>
+              {% for t in post.tags %}
+              <span class="badge bg-info text-dark me-1">{{ t }}</span>
+              {% endfor %}
+            </p>
+            {% endif %}
+            {% if post.attachments %}
+            <ul class="mt-2">
+              {% for a in post.attachments %}
+              {% if a not in post.get('embedded', []) %}
+              <li>
+                {% if a.lower().endswith(('png','jpg','jpeg','gif')) %}
+                <img src="/uploads/{{ a }}" class="img-fluid" alt="{{ a }}">
+                {% else %}
+                <a href="/uploads/{{ a }}" target="_blank">{{ a }}</a>
+                {% endif %}
+              </li>
+              {% endif %}
+              {% endfor %}
+            </ul>
+            {% endif %}
+            {% if post.author %}<p class="text-muted small">{{ post.author }}</p>{% endif %}
+            <a class="btn btn-sm btn-link with-back" href="/post/{{ item.index }}">Open</a>
+            {% if session.get('logged_in') %}
+            <form class="mt-2" method="post" action="/delete/{{ item.index }}" onsubmit="return confirm('Delete this post?');">
+              <a class="btn btn-sm btn-secondary with-back" href="/edit/{{ item.index }}">Edit</a>
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+            <form class="mt-1" method="post" action="/lock/{{ item.index }}">
+              <button type="submit" class="btn btn-sm btn-outline-secondary">{{ 'Unlock' if post.locked else 'Lock' }}</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        {% if not cat_posts %}
+          {% if c == 'All Posts' and (search_query or tag_filters) %}
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-search" style="font-size: 2rem;"></i>
+              <p class="mt-2">No posts found matching your search criteria.</p>
+              <p class="small">Try adjusting your search terms or tag filters.</p>
+            </div>
+          {% else %}
+            <p>No posts yet.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    
+    <!-- Pagination for All Posts tab -->
+    <div id="allPostsPagination" style="display: none;">
+      {% if pagination.total_pages > 1 %}
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+          {% if pagination.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pagination.prev_num }}&sort_by={{ sort_by }}&per_page={{ per_page }}&category={{ category_filter }}{% if search_query %}&search={{ search_query }}{% endif %}{% if tag_filters %}&tags={{ tag_filters }}{% endif %}">Previous</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Previous</span>
+          </li>
+          {% endif %}
+          
+          {% for page_num in range(1, pagination.total_pages + 1) %}
+            {% if page_num <= 2 or page_num > pagination.total_pages - 2 or (page_num >= pagination.page - 2 and page_num <= pagination.page + 2) %}
+              {% if page_num == pagination.page %}
+              <li class="page-item active">
+                <span class="page-link">{{ page_num }}</span>
+              </li>
+              {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_num }}&sort_by={{ sort_by }}&per_page={{ per_page }}&category={{ category_filter }}{% if search_query %}&search={{ search_query }}{% endif %}{% if tag_filters %}&tags={{ tag_filters }}{% endif %}">{{ page_num }}</a>
+              </li>
+              {% endif %}
+            {% elif page_num == 3 and pagination.page > 5 %}
+              <li class="page-item disabled">
+                <span class="page-link">...</span>
+              </li>
+            {% elif page_num == pagination.total_pages - 2 and pagination.page < pagination.total_pages - 4 %}
+              <li class="page-item disabled">
+                <span class="page-link">...</span>
+              </li>
+            {% endif %}
+          {% endfor %}
+          
+          {% if pagination.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pagination.next_num }}&sort_by={{ sort_by }}&per_page={{ per_page }}&category={{ category_filter }}{% if search_query %}&search={{ search_query }}{% endif %}{% if tag_filters %}&tags={{ tag_filters }}{% endif %}">Next</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Next</span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Data for JavaScript -->
+<script type="application/json" id="categoryResourcesData">
+  {{ resources_by_category|tojson if resources_by_category else '{}' }}
+</script>
+<script type="application/json" id="currentResourcesData">
+  {{ category_resources|tojson if category_resources else '[]' }}
+</script>
+
+<script>
+// Server-side filtering function
+function applyServerFilters() {
+  var currentCategory = getCurrentCategory();
+  
+  // Only apply server-side filtering for "All Posts" tab, since other tabs use client-side filtering
+  if (currentCategory === 'All Posts') {
+    var url = new URL(window.location);
+    var searchQuery = document.getElementById('searchInput').value.trim();
+    var tags = Array.from(document.querySelectorAll('.tag-filter:checked')).map(cb => cb.value);
+    
+    // Update URL parameters
+    if (searchQuery) {
+      url.searchParams.set('search', searchQuery);
+    } else {
+      url.searchParams.delete('search');
+    }
+    
+    if (tags.length) {
+      url.searchParams.set('tags', tags.join(','));
+    } else {
+      url.searchParams.delete('tags');
+    }
+    
+    // Reset to first page when filtering
+    url.searchParams.set('page', '1');
+    url.searchParams.set('category', 'all');
+    
+    // Preserve sort and per_page settings
+    var sort = document.getElementById('sortSelect').value;
+    var perPage = document.getElementById('perPageSelect').value;
+    url.searchParams.set('sort_by', sort);
+    url.searchParams.set('per_page', perPage);
+    
+    window.location.href = url.toString();
+  } else {
+    // For category tabs, use client-side filtering as before
+    clientSideFilterPosts();
+  }
+}
+
+// Client-side filtering for category tabs
+function clientSideFilterPosts() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var tags = Array.from(document.querySelectorAll('.tag-filter:checked')).map(cb => cb.value);
+  document.querySelectorAll('.tab-pane.active .post').forEach(function(p) {
+    var text = p.innerText.toLowerCase();
+    var ptags = p.dataset.tags ? p.dataset.tags.split(',') : [];
+    var matchText = text.includes(q);
+    var matchTags = tags.every(function(t){ return ptags.includes(t); });
+    p.style.display = (matchText && matchTags) ? '' : 'none';
+  });
+}
+
+// Legacy function name for backward compatibility
+function filterPosts() {
+  applyServerFilters();
+}
+
+function buildBackUrl() {
+  var url = new URL(window.location);
+  var tags = Array.from(document.querySelectorAll('.tag-filter:checked')).map(cb => cb.value);
+  var searchQuery = document.getElementById('searchInput').value.trim();
+  
+  if (tags.length) {
+    url.searchParams.set('tags', tags.join(','));
+  } else {
+    url.searchParams.delete('tags');
+  }
+  
+  if (searchQuery) {
+    url.searchParams.set('search', searchQuery);
+  } else {
+    url.searchParams.delete('search');
+  }
+  
+  // Always preserve the current category parameter from the URL
+  // This ensures we remember which category was selected
+  var currentCategoryParam = url.searchParams.get('category');
+  if (currentCategoryParam) {
+    url.searchParams.set('category', currentCategoryParam);
+  } else {
+    // If no category param, check which tab is currently active
+    var currentCategory = getCurrentCategory();
+    if (currentCategory !== 'All Posts') {
+      url.searchParams.set('category', currentCategory);
+    } else {
+      url.searchParams.set('category', 'all');
+    }
+  }
+  
+  return url.toString();
+}
+
+function updateBackLinks() {
+  var backUrl = buildBackUrl();
+  document.querySelectorAll('a.with-back').forEach(function(link){
+    var url = new URL(link.getAttribute('href'), window.location.origin);
+    url.searchParams.set('back', backUrl);
+    link.setAttribute('href', url.pathname + url.search);
+  });
+}
+
+function updateSortAndFilter() {
+  var sort = document.getElementById('sortSelect').value;
+  var perPage = document.getElementById('perPageSelect').value;
+  var currentCategory = getCurrentCategory();
+  
+  if (currentCategory === 'All Posts') {
+    var url = new URL(window.location);
+    var searchQuery = document.getElementById('searchInput').value.trim();
+    var tags = Array.from(document.querySelectorAll('.tag-filter:checked')).map(cb => cb.value);
+    
+    url.searchParams.set('sort_by', sort);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1'); // Reset to first page
+    url.searchParams.set('category', 'all');
+    
+    // Preserve search and tag filters
+    if (searchQuery) {
+      url.searchParams.set('search', searchQuery);
+    } else {
+      url.searchParams.delete('search');
+    }
+    
+    if (tags.length) {
+      url.searchParams.set('tags', tags.join(','));
+    } else {
+      url.searchParams.delete('tags');
+    }
+    
+    window.location.href = url.toString();
+  }
+}
+
+function updateCategoryFilter(category) {
+  var url = new URL(window.location);
+  if (category === 'All Posts') {
+    var sort = document.getElementById('sortSelect').value;
+    var perPage = document.getElementById('perPageSelect').value;
+    var searchQuery = document.getElementById('searchInput').value.trim();
+    var tags = Array.from(document.querySelectorAll('.tag-filter:checked')).map(cb => cb.value);
+    
+    url.searchParams.set('sort_by', sort);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    url.searchParams.set('category', 'all');
+    
+    // Preserve search and tag filters for All Posts
+    if (searchQuery) {
+      url.searchParams.set('search', searchQuery);
+    } else {
+      url.searchParams.delete('search');
+    }
+    
+    if (tags.length) {
+      url.searchParams.set('tags', tags.join(','));
+    } else {
+      url.searchParams.delete('tags');
+    }
+    
+    window.location.href = url.toString();
+  } else {
+    // For specific categories, clear search and tag filters
+    url.searchParams.delete('search');
+    url.searchParams.delete('tags');
+    url.searchParams.set('category', category);
+    url.searchParams.set('page', '1'); // Reset to first page when changing category
+    window.location.href = url.toString(); // Navigate to update the URL and page
+  }
+}
+
+function getCurrentCategory() {
+  var activeTab = document.querySelector('#catTabs .nav-link.active');
+  return activeTab ? activeTab.textContent.trim() : 'All Posts';
+}
+
+function showPaginationForAllPosts() {
+  var activeTab = document.querySelector('#catTabs .nav-link.active');
+  var isAllPosts = activeTab && activeTab.textContent.trim() === 'All Posts';
+  
+  document.getElementById('allPostsPaginationInfo').style.display = isAllPosts ? 'block' : 'none';
+  document.getElementById('allPostsPagination').style.display = isAllPosts ? 'block' : 'none';
+}
+
+// Debounce function for search input
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Debounced search function
+const debouncedSearch = debounce(function() {
+  applyServerFilters();
+}, 500); // 500ms delay
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  var currentCategory = getCurrentCategory();
+  if (currentCategory === 'All Posts') {
+    debouncedSearch();
+  } else {
+    clientSideFilterPosts();
+    updateBackLinks();
+  }
+});
+
+document.querySelectorAll('.tag-filter').forEach(function(cb){
+  cb.addEventListener('change', function() {
+    var currentCategory = getCurrentCategory();
+    if (currentCategory === 'All Posts') {
+      applyServerFilters();
+    } else {
+      clientSideFilterPosts();
+      updateBackLinks();
+    }
+  });
+});
+
+document.querySelectorAll('#catTabs button').forEach(function(btn) {
+  btn.addEventListener('shown.bs.tab', function() {
+    var currentCategory = getCurrentCategory();
+    if (currentCategory === 'All Posts') {
+      // For All Posts tab, we don't need to filter since server already did it
+      // Just update pagination display
+    } else {
+      // For category tabs, use client-side filtering
+      clientSideFilterPosts();
+    }
+    showPaginationForAllPosts();
+    updateBackLinks();
+    
+    // Update resources for the new category
+    var category = this.getAttribute('data-category');
+    updateResourcesForCategory(category);
+  });
+});
+
+// Show pagination on page load if All Posts is active and restore tag filters
+document.addEventListener('DOMContentLoaded', function() {
+  var url = new URL(window.location);
+  
+  // Restore tag filters from URL
+  var tagParam = url.searchParams.get('tags');
+  if (tagParam) {
+    tagParam.split(',').forEach(function(t){
+      var cb = document.querySelector('.tag-filter[value="' + t + '"]');
+      if (cb) cb.checked = true;
+    });
+  }
+
+  // Restore search query from URL (already set via template)
+  var searchParam = url.searchParams.get('search');
+  if (searchParam) {
+    document.getElementById('searchInput').value = searchParam;
+  }
+
+  // Restore category tab
+  var catParam = url.searchParams.get('category');
+  if (catParam && catParam !== 'all') {
+    var btn = document.querySelector('#catTabs button[data-category="' + catParam + '"]');
+    if (btn) {
+      var tab = new bootstrap.Tab(btn);
+      tab.show();
+    }
+  }
+
+  showPaginationForAllPosts();
+  
+  // Apply appropriate filtering based on current tab
+  var currentCategory = getCurrentCategory();
+  if (currentCategory !== 'All Posts') {
+    clientSideFilterPosts();
+  }
+  
+  updateBackLinks();
+});
+
+// Add current page as back parameter to links so we can return to same filters
+updateBackLinks();
+
+// Resources handling
+function openDynamicResource(index) {
+  var inputField = document.getElementById('dynRes' + index);
+  var value = inputField.value.trim();
+  
+  if (!value) {
+    alert('Please enter a value');
+    return;
+  }
+  
+  var resourcesData = JSON.parse(document.getElementById('categoryResourcesData').textContent);
+  var currentResources = JSON.parse(document.getElementById('currentResourcesData').textContent);
+  var resource = currentResources[index];
+  
+  if (!resource) {
+    alert('Resource not found');
+    return;
+  }
+  
+  var path = resource.path.replace('<DYNAMIC>', encodeURIComponent(value));
+  var url;
+  
+  if (resource.type === 'download') {
+    url = '/resources/' + path;
+  } else if (resource.type === 'file_explorer') {
+    url = path;
+  } else {
+    url = path;
+  }
+  
+  window.open(url, '_blank');
+}
+
+function updateResourcesForCategory(category) {
+  var resourcesSection = document.getElementById('categoryResourcesSection');
+  if (!resourcesSection) return;
+  
+  var resourcesData = JSON.parse(document.getElementById('categoryResourcesData').textContent);
+  var resources = [];
+  
+  if (category === 'All Posts') {
+    // Show only General category resources when viewing all posts
+    resources = resourcesData['General'] || [];
+  } else {
+    // Show resources for the specific category
+    resources = resourcesData[category] || [];
+  }
+  
+  // Update the section title
+  var titleElement = resourcesSection.querySelector('.card-header h5');
+  if (titleElement) {
+    var icon = '<i class="bi bi-folder"></i>';
+    var title = category === 'All Posts' ? 'General Resources' : category + ' Resources';
+    var badge = '<span class="badge bg-light text-dark ms-2">' + resources.length + '</span>';
+    titleElement.innerHTML = icon + ' ' + title + ' ' + badge;
+  }
+  
+  // Show/hide the entire section based on whether there are resources
+  if (resources.length === 0) {
+    resourcesSection.style.display = 'none';
+  } else {
+    resourcesSection.style.display = 'block';
+    // Update current resources data
+    document.getElementById('currentResourcesData').textContent = JSON.stringify(resources);
+  }
+}
+</script>
+{% endblock %}

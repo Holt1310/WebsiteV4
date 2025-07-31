@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h2>Manage Categories</h2>
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+<form method="post" class="mb-3 d-flex">
+  <input type="hidden" name="action" value="add">
+  <input type="text" class="form-control me-2" name="category" placeholder="New category" required>
+  <button type="submit" class="btn btn-primary">Add</button>
+</form>
+<ul class="list-group">
+  {% for c in categories %}
+  <li class="list-group-item d-flex align-items-center">
+    <form method="post" class="flex-grow-1 d-flex me-2">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="old" value="{{ c }}">
+      <input type="text" name="new" value="{{ c }}" class="form-control me-2">
+      <button type="submit" class="btn btn-sm btn-secondary">Save</button>
+    </form>
+    <form method="post" onsubmit="return confirm('Delete category?');">
+      <input type="hidden" name="action" value="delete">
+      <input type="hidden" name="name" value="{{ c }}">
+      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

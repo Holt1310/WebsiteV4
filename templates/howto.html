@@ -1,0 +1,47 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+  <div class="container-fluid py-5">
+    <h1 class="display-5 fw-bold">How To Use TruckSoft</h1>
+    <p class="col-md-8 fs-4">The following sections summarize key tasks from our technical manual.</p>
+    <a class="btn btn-primary btn-lg" href="/resources/{{ manual_file }}" target="_blank">Download Full Manual</a>
+  </div>
+</div>
+
+<div class="mb-3">
+  <input type="text" class="form-control" id="searchInput" placeholder="Search instructions...">
+</div>
+
+<div class="accordion" id="howtoAccordion">
+  {% for section in sections %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{ loop.index }}">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+        {{ section.title }}
+      </button>
+    </h2>
+    <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#howtoAccordion">
+      <div class="accordion-body">
+        <ul>
+          {% for p in section.points %}
+          <li class="howto-item">{{ p }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  var sections = document.querySelectorAll('#howtoAccordion .accordion-item');
+  sections.forEach(function(section) {
+    var text = section.innerText.toLowerCase();
+    section.style.display = text.includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Data Tables Management</h2>
+            <p class="text-muted">Create and manage custom data tables that can be referenced in resources and other integrations.</p>
+            
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            
+            {% if success %}
+            <div class="alert alert-success">{{ success }}</div>
+            {% endif %}
+            
+            <!-- Create New Table Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Create New Data Table</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="create-table-form">
+                        <input type="hidden" name="action" value="create">
+                        <input type="hidden" name="column_count" id="column_count" value="1">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="table_name">Table Name:</label>
+                                    <input type="text" class="form-control" name="table_name" id="table_name" 
+                                           placeholder="e.g., truck_models, locations, clients" required
+                                           pattern="[a-zA-Z][a-zA-Z0-9_]*" 
+                                           title="Must start with a letter and contain only letters, numbers, and underscores">
+                                    <small class="form-text text-muted">Use lowercase letters, numbers, and underscores only</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="description">Description:</label>
+                                    <input type="text" class="form-control" name="description" id="description" 
+                                           placeholder="Brief description of what this table stores">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5>Table Columns:</h5>
+                        <div id="columns-container">
+                            <div class="column-definition border p-3 mb-3" data-column="0">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label>Column Name:</label>
+                                        <input type="text" class="form-control" name="column_0_name" 
+                                               placeholder="e.g., name, model, price" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Type:</label>
+                                        <select class="form-control" name="column_0_type">
+                                            <option value="string">Text (String)</option>
+                                            <option value="integer">Number (Integer)</option>
+                                            <option value="decimal">Decimal</option>
+                                            <option value="boolean">Yes/No (Boolean)</option>
+                                            <option value="date">Date</option>
+                                            <option value="datetime">Date & Time</option>
+                                            <option value="text">Long Text</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Options:</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="column_0_required">
+                                            <label class="form-check-label">Required</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="column_0_unique">
+                                            <label class="form-check-label">Unique</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>&nbsp;</label>
+                                        <button type="button" class="btn btn-danger btn-sm d-block remove-column" disabled>Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-secondary" onclick="addColumn()">Add Column</button>
+                            <button type="submit" class="btn btn-primary">Create Table</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Existing Tables Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>Existing Data Tables</h4>
+                </div>
+                <div class="card-body">
+                    {% if tables %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Table Name</th>
+                                    <th>Description</th>
+                                    <th>Columns</th>
+                                    <th>Row Count</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for table in tables %}
+                                <tr>
+                                    <td><strong>{{ table.display_name }}</strong><br>
+                                        <small class="text-muted">{{ table.table_name }}</small>
+                                    </td>
+                                    <td>{{ table.description or 'No description' }}</td>
+                                    <td>
+                                        <small>
+                                            {% for col in table.columns %}
+                                            <span class="badge bg-secondary me-1">{{ col.name }} ({{ col.type }})</span>
+                                            {% endfor %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ table.row_count }} rows</span>
+                                    </td>
+                                    <td>{{ table.created_at[:19] if table.created_at else 'N/A' }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('manage_table_data', table_name=table.table_name) }}" 
+                                               class="btn btn-sm btn-primary">Manage Data</a>
+                                            <form method="post" style="display: inline;" 
+                                                  onsubmit="return confirm('Delete table {{ table.table_name }} and ALL its data? This cannot be undone!');">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="table_name" value="{{ table.table_name }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <h5>No custom data tables found</h5>
+                        <p>Create your first custom data table using the form above. These tables can then be referenced in resources or other integrations.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Usage Examples -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4>Usage Examples</h4>
+                </div>
+                <div class="card-body">
+                    <h6>Common Data Table Types:</h6>
+                    <ul>
+                        <li><strong>Truck Models:</strong> model_name (string), year (integer), capacity (decimal), manufacturer (string)</li>
+                        <li><strong>Locations:</strong> location_name (string), address (text), active (boolean), region (string)</li>
+                        <li><strong>Client Companies:</strong> company_name (string), contact_email (string), phone (string), priority (integer)</li>
+                        <li><strong>Equipment Types:</strong> equipment_name (string), category (string), cost_per_hour (decimal), available (boolean)</li>
+                    </ul>
+                    
+                    <h6>How to Reference in Forms:</h6>
+                    <p>Once created, these tables will be available as data sources in the form editor, allowing you to create dropdown fields, reference lookups, and data validation based on your custom data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let columnCount = 1;
+
+function addColumn() {
+    const container = document.getElementById('columns-container');
+    const newColumn = document.createElement('div');
+    newColumn.className = 'column-definition border p-3 mb-3';
+    newColumn.setAttribute('data-column', columnCount);
+    
+    newColumn.innerHTML = `
+        <div class="row">
+            <div class="col-md-3">
+                <label>Column Name:</label>
+                <input type="text" class="form-control" name="column_${columnCount}_name" 
+                       placeholder="e.g., name, model, price" required>
+            </div>
+            <div class="col-md-2">
+                <label>Type:</label>
+                <select class="form-control" name="column_${columnCount}_type">
+                    <option value="string">Text (String)</option>
+                    <option value="integer">Number (Integer)</option>
+                    <option value="decimal">Decimal</option>
+                    <option value="boolean">Yes/No (Boolean)</option>
+                    <option value="date">Date</option>
+                    <option value="datetime">Date & Time</option>
+                    <option value="text">Long Text</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Options:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="column_${columnCount}_required">
+                    <label class="form-check-label">Required</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="column_${columnCount}_unique">
+                    <label class="form-check-label">Unique</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn-danger btn-sm d-block remove-column">Remove</button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newColumn);
+    columnCount++;
+    document.getElementById('column_count').value = columnCount;
+    
+    // Add remove functionality
+    newColumn.querySelector('.remove-column').addEventListener('click', function() {
+        removeColumn(newColumn);
+    });
+    
+    updateRemoveButtons();
+}
+
+function removeColumn(columnElement) {
+    columnElement.remove();
+    columnCount--;
+    document.getElementById('column_count').value = columnCount;
+    updateRemoveButtons();
+}
+
+function updateRemoveButtons() {
+    const removeButtons = document.querySelectorAll('.remove-column');
+    removeButtons.forEach((button, index) => {
+        button.disabled = removeButtons.length <= 1;
+    });
+}
+
+// Initialize remove button functionality
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.remove-column').forEach(button => {
+        button.addEventListener('click', function() {
+            removeColumn(button.closest('.column-definition'));
+        });
+    });
+    updateRemoveButtons();
+});
+</script>
+{% endblock %}

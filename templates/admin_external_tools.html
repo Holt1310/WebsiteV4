@@ -1,0 +1,266 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card shadow">
+      <div class="card-header bg-success text-white">
+        <h4 class="mb-0"><i class="bi bi-tools"></i> Server External Tools Management</h4>
+      </div>
+      <div class="card-body">
+        
+        <!-- Success/Error Messages -->
+        {% if error %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endif %}
+        
+        {% if success %}
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ success }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endif %}
+
+        <!-- Server Settings -->
+        <div class="mb-4">
+          <h5 class="text-success border-bottom pb-2">
+            <i class="bi bi-gear"></i> Server Settings
+          </h5>
+          
+          <form method="POST">
+            <input type="hidden" name="action" value="update_settings">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="allow_user_tools" 
+                         {% if config.settings.allow_user_tools %}checked{% endif %}>
+                  <label class="form-check-label">Allow User Tools</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Max User Tools</label>
+                <input type="number" class="form-control" name="max_user_tools" 
+                       value="{{ config.settings.max_user_tools or 10 }}" min="1" max="50">
+              </div>
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="log_tool_usage" 
+                         {% if config.settings.log_tool_usage %}checked{% endif %}>
+                  <label class="form-check-label">Log Tool Usage</label>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-2">Update Settings</button>
+          </form>
+        </div>
+
+        <!-- Server Tools List -->
+        <div class="mb-4">
+          <h5 class="text-success border-bottom pb-2">
+            <i class="bi bi-list"></i> Server Tools
+          </h5>
+          
+          {% if config.server_tools %}
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Path/URL</th>
+                    <th>Status</th>
+                    <th>Visibility</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for tool in config.server_tools %}
+                  <tr>
+                    <td><code>{{ tool.id }}</code></td>
+                    <td>
+                      {% if tool.icon %}<i class="{{ tool.icon }}"></i>{% endif %}
+                      {{ tool.name }}
+                    </td>
+                    <td>
+                      <span class="badge bg-info">{{ tool.type or 'system' }}</span>
+                    </td>
+                    <td>
+                      <small class="text-muted">
+                        {% if tool.type == 'website' %}
+                          {{ tool.website_url or 'No URL' }}
+                        {% else %}
+                          {{ tool.executable or 'No path' }}
+                        {% endif %}
+                      </small>
+                    </td>
+                    <td>
+                      {% if tool.enabled %}
+                        <span class="badge bg-success">Enabled</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Disabled</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if tool.hidden %}
+                        <span class="badge bg-warning">Hidden</span>
+                      {% else %}
+                        <span class="badge bg-primary">Visible</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <form method="POST" class="d-inline">
+                        <input type="hidden" name="action" value="update_tool">
+                        <input type="hidden" name="tool_id" value="{{ tool.id }}">
+                        <input type="hidden" name="enabled" value="{{ '1' if not tool.enabled else '' }}">
+                        <input type="hidden" name="hidden" value="{{ '1' if tool.hidden else '' }}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Toggle Status">
+                          {% if tool.enabled %}Disable{% else %}Enable{% endif %}
+                        </button>
+                      </form>
+                      
+                      {% if not tool.builtin %}
+                      <form method="POST" class="d-inline">
+                        <input type="hidden" name="action" value="delete_tool">
+                        <input type="hidden" name="tool_id" value="{{ tool.id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                onclick="return confirm('Delete tool {{ tool.name }}?')" title="Delete">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted">No server tools configured.</p>
+          {% endif %}
+        </div>
+
+        <!-- Add New Tool -->
+        <div class="mb-4">
+          <h5 class="text-success border-bottom pb-2">
+            <i class="bi bi-plus-circle"></i> Add New Server Tool
+          </h5>
+          
+          <form method="POST" class="needs-validation" novalidate>
+            <input type="hidden" name="action" value="add_tool">
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Tool ID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="new_tool_id" required 
+                         pattern="[a-zA-Z0-9_]+" title="Only letters, numbers, and underscores">
+                  <div class="form-text">Unique identifier (letters, numbers, underscores only)</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Tool Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="new_tool_name" required>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="new_tool_description" rows="2"></textarea>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">Icon (Bootstrap Icons)</label>
+                  <input type="text" class="form-control" name="new_tool_icon" 
+                         value="bi bi-gear" placeholder="bi bi-gear">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">Tool Type <span class="text-danger">*</span></label>
+                  <select class="form-control" name="new_tool_type" required onchange="toggleToolFields(this.value)">
+                    <option value="executable">Executable</option>
+                    <option value="script">Script</option>
+                    <option value="website">Website</option>
+                    <option value="client_service">Client Service</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="new_tool_enabled" checked>
+                    <label class="form-check-label">Enabled</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="new_tool_hidden">
+                    <label class="form-check-label">Hidden (still active)</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3" id="executable_field">
+              <label class="form-label">Executable Path</label>
+              <input type="text" class="form-control" name="new_tool_executable" 
+                     placeholder="C:\path\to\executable.exe">
+              <div class="form-text">Full path to executable file</div>
+            </div>
+            
+            <div class="mb-3" id="website_field" style="display: none;">
+              <label class="form-label">Website URL</label>
+              <input type="url" class="form-control" name="new_tool_website_url" 
+                     placeholder="https://example.com">
+              <div class="form-text">Full URL including http:// or https://</div>
+            </div>
+            
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-plus-circle"></i> Add Tool
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleToolFields(type) {
+  const executableField = document.getElementById('executable_field');
+  const websiteField = document.getElementById('website_field');
+  
+  if (type === 'website') {
+    executableField.style.display = 'none';
+    websiteField.style.display = 'block';
+  } else {
+    executableField.style.display = 'block';
+    websiteField.style.display = 'none';
+  }
+}
+
+// Bootstrap form validation
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    var forms = document.getElementsByClassName('needs-validation');
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-gear"></i> Manage Resources</h2>
+  <div>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+      <i class="bi bi-eye"></i> View Resources
+    </a>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  <i class="bi bi-exclamation-triangle"></i> {{ error }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Add new resource form -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Add New Resource</h5>
+  </div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="action" value="add">
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <label for="title" class="form-label">Title</label>
+          <input type="text" name="title" id="title" class="form-control" placeholder="Resource title" required>
+        </div>
+        <div class="col-md-6 mb-2">
+          <label for="category" class="form-label">Category</label>
+          <select name="category" id="category" class="form-select" required>
+            {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mb-2">
+        <label for="description" class="form-label">Description</label>
+        <input type="text" name="description" id="description" class="form-control" placeholder="Resource description">
+      </div>
+      <div class="mb-2">
+        <label for="rtype" class="form-label">Type</label>
+        <select name="type" class="form-select" id="rtype" onchange="toggleFields()">
+          <option value="download">Download</option>
+          <option value="url">Link</option>
+          <option value="file_explorer">File Explorer</option>
+        </select>
+      </div>
+      <div class="mb-2" id="fileField">
+        <label for="file" class="form-label">File</label>
+        <input type="file" name="file" id="file" class="form-control">
+      </div>
+      <div class="mb-2" id="urlField" style="display:none;">
+        <label for="url" class="form-label">URL</label>
+        <input type="text" name="url" id="url" class="form-control" placeholder="https://example.com">
+      </div>
+      <div class="mb-2" id="filePathField" style="display:none;">
+        <label for="file_path" class="form-label">File Path</label>
+        <input type="text" name="file_path" id="file_path" class="form-control" placeholder="Z:\business_objects\partnumbers\ or file:///Z:/business_objects/partnumbers/">
+        <small class="form-text text-muted">Enter a local folder path or file:// URL to open in file explorer</small>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="dynamic" id="dynamicCheck">
+        <label class="form-check-label" for="dynamicCheck">Contains &lt;DYNAMIC&gt; placeholder</label>
+        <small class="form-text text-muted">Check this if your resource path contains &lt;DYNAMIC&gt; that will be replaced with user input</small>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Resource
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Resources list -->
+<div class="card">
+  <div class="card-header">
+    <h5>Current Resources</h5>
+  </div>
+  <div class="card-body">
+    {% if resources %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in resources %}
+          <tr id="row-{{ loop.index0 }}">
+            <td>
+              <strong>{{ r.title }}</strong>
+              {% if r.dynamic %}
+                <span class="badge bg-info ms-1">Dynamic</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge bg-secondary">{{ r.get('category', 'General') }}</span>
+            </td>
+            <td>
+              {% if r.type == 'file_explorer' %}
+              <span class="badge bg-success">File Explorer</span>
+              {% elif r.type == 'url' %}
+              <span class="badge bg-primary">Link</span>
+              {% else %}
+              <span class="badge bg-secondary">Download</span>
+              {% endif %}
+            </td>
+            <td>
+              <small>{{ r.description }}</small>
+              {% if r.type == 'file_explorer' %}
+              <br><small class="text-muted">Path: {{ r.path }}</small>
+              {% endif %}
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1" data-index="{{ loop.index0 }}" onclick="editResource(this.getAttribute('data-index'))">
+                <i class="bi bi-pencil"></i> Edit
+              </button>
+              <form method="post" class="d-inline">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete resource {{ r.title }}?');">
+                  <i class="bi bi-trash"></i> Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          <tr id="edit-row-{{ loop.index0 }}" style="display: none;">
+            <td colspan="5">
+              <form method="post" class="border p-3 bg-light rounded">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                <div class="row">
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-control" value="{{ r.title }}" required>
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select" required>
+                      {% for cat in categories %}
+                      <option value="{{ cat }}" {{ 'selected' if cat == r.get('category', 'General') else '' }}>{{ cat }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label">Description</label>
+                    <input type="text" name="description" class="form-control" value="{{ r.description }}">
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <button type="submit" class="btn btn-success btn-sm me-2">Save Changes</button>
+                  <button type="button" class="btn btn-secondary btn-sm" data-index="{{ loop.index0 }}" onclick="cancelEdit(this.getAttribute('data-index'))">Cancel</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-folder-x" style="font-size: 3rem; color: #6c757d;"></i>
+      <h4 class="text-muted mt-3">No Resources Available</h4>
+      <p class="text-muted">Add your first resource using the form above.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function toggleFields() {
+  var type = document.getElementById('rtype').value;
+  var fileField = document.getElementById('fileField');
+  var urlField = document.getElementById('urlField');
+  var filePathField = document.getElementById('filePathField');
+  
+  // Hide all fields first
+  fileField.style.display = 'none';
+  urlField.style.display = 'none';
+  filePathField.style.display = 'none';
+  
+  // Show the appropriate field
+  if (type === 'download') {
+    fileField.style.display = 'block';
+  } else if (type === 'url') {
+    urlField.style.display = 'block';
+  } else if (type === 'file_explorer') {
+    filePathField.style.display = 'block';
+  }
+}
+
+function editResource(index) {
+  var row = document.getElementById('row-' + index);
+  var editRow = document.getElementById('edit-row-' + index);
+  
+  if (row && editRow) {
+    row.style.display = 'none';
+    editRow.style.display = '';
+  }
+}
+
+function cancelEdit(index) {
+  var row = document.getElementById('row-' + index);
+  var editRow = document.getElementById('edit-row-' + index);
+  
+  if (row && editRow) {
+    row.style.display = '';
+    editRow.style.display = 'none';
+  }
+}
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+  toggleFields();
+  
+  // Add form validation
+  var form = document.querySelector('form[method="post"]');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      var type = document.getElementById('rtype').value;
+      var title = document.getElementById('title').value.trim();
+      
+      if (!title) {
+        alert('Please enter a resource title');
+        e.preventDefault();
+        return false;
+      }
+      
+      if (type === 'download') {
+        var fileInput = document.getElementById('file');
+        if (!fileInput.files || fileInput.files.length === 0) {
+          alert('Please select a file to upload');
+          e.preventDefault();
+          return false;
+        }
+      } else if (type === 'url') {
+        var url = document.getElementById('url').value.trim();
+        if (!url) {
+          alert('Please enter a URL');
+          e.preventDefault();
+          return false;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          alert('URL must start with http:// or https://');
+          e.preventDefault();
+          return false;
+        }
+      } else if (type === 'file_explorer') {
+        var filePath = document.getElementById('file_path').value.trim();
+        if (!filePath) {
+          alert('Please enter a file path');
+          e.preventDefault();
+          return false;
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h2>Manage Users</h2>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h3>Database Users</h3>
+    {% if admins %}
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>External Features</th>
+            <th>Created</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in admins %}
+          <tr>
+            <td><strong>{{ user.username }}</strong></td>
+            <td>{{ user.first }} {{ user.last }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              {% if user.external_features == 1 %}
+                <span class="badge bg-success">Enabled</span>
+              {% else %}
+                <span class="badge bg-secondary">Disabled</span>
+              {% endif %}
+            </td>
+            <td>{{ user.created_at[:19] if user.created_at else 'N/A' }}</td>
+            <td>{{ user.last_login[:19] if user.last_login else 'Never' }}</td>
+            <td>
+              <div class="btn-group" role="group">
+                <form method="post" style="display: inline;" onsubmit="return confirm('Toggle external features for {{ user.username }}?');">
+                  <input type="hidden" name="action" value="toggle_external">
+                  <input type="hidden" name="username" value="{{ user.username }}">
+                  <button type="submit" class="btn btn-sm btn-outline-primary">
+                    {% if user.external_features == 1 %}Disable{% else %}Enable{% endif %} External
+                  </button>
+                </form>
+                <form method="post" style="display: inline;" onsubmit="return confirm('Permanently delete user {{ user.username }}? This cannot be undone!');">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="username" value="{{ user.username }}">
+                  <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      <h5>No users found in database</h5>
+      <p>Users can register through the <a href="{{ url_for('register') }}">registration page</a>.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if legacy_admins %}
+<div class="row mt-4">
+  <div class="col-md-12">
+    <h3>Legacy JSON Admins <small class="text-muted">(Deprecated)</small></h3>
+    <div class="alert alert-warning">
+      <strong>Note:</strong> These are legacy admins from the old JSON-based system. 
+      Consider migrating these to database users.
+    </div>
+    <ul class="list-group">
+      {% for a in legacy_admins %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>{{ a.first }} {{ a.last }} ({{ a.username }})</div>
+        <form method="post" onsubmit="return confirm('Remove legacy admin?');">
+          <input type="hidden" name="action" value="delete_legacy">
+          <input type="hidden" name="username" value="{{ a.username }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+  <div class="col-md-12">
+    <h3>Quick Actions</h3>
+    <div class="card">
+      <div class="card-body">
+        <p><strong>Total Users:</strong> {{ admins|length }}</p>
+        <p><strong>Users with External Features:</strong> {{ admins|selectattr('external_features', 'equalto', 1)|list|length }}</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Add New User</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

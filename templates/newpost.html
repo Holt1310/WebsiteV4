@@ -1,0 +1,969 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  {% set back_link = request.args.get('back') or request.referrer or url_for('forum') %}
+  <h2 class="mb-0">{% if post %}Edit Post{% else %}New Post{% endif %}</h2>
+  <a href="{{ back_link }}" class="btn btn-secondary">Back</a>
+</div>
+<form method="post" enctype="multipart/form-data" onsubmit="console.log('DEBUG: Form submit called'); saveContent(); console.log('DEBUG: Form data - title:', document.querySelector('[name=title]').value, 'content length:', document.getElementById('content').value.length); return true;">
+  <div class="mb-3">
+    <input type="text" class="form-control" name="title" placeholder="Title" value="{{ post.title if post }}" required>
+  </div>
+  <div class="mb-3">
+    <select class="form-select" name="category" required>
+      {% for c in categories %}
+      <option value="{{ c }}" {% if post and post.category == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <div class="btn-toolbar mb-2" role="toolbar">
+      <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-sm btn-light" data-cmd="bold"><strong>B</strong></button>
+        <button type="button" class="btn btn-sm btn-light" data-cmd="italic"><em>I</em></button>
+        <button type="button" class="btn btn-sm btn-light" data-cmd="underline"><u>U</u></button>
+      </div>
+      <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-sm btn-light" data-cmd="insertUnorderedList">&bull; List</button>
+        <button type="button" class="btn btn-sm btn-light" data-cmd="insertOrderedList">1. List</button>
+      </div>
+      <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-sm btn-light" onclick="addLink()">Link</button>
+        <button type="button" class="btn btn-sm btn-light" onclick="insertImage()">Image</button>
+        <button type="button" class="btn btn-sm btn-light" onclick="insertSpacer()">Line</button>
+        <button type="button" class="btn btn-sm btn-light" onclick="insertGrid()">Grid</button>
+        <button type="button" class="btn btn-sm btn-light" onclick="insertCode()">Code</button>
+      </div>
+    </div>
+    <div id="editor" class="form-control" contenteditable="true" style="min-height:200px; overflow-y:auto;">{{ post.content|safe if post }}</div>
+    <div class="text-muted small mt-1">
+      💡 Tip: You can drag and drop image files here, or copy/paste from Word documents
+    </div>
+    <textarea name="content" id="content" hidden></textarea>
+    <input type="hidden" name="embedded_images" id="embedded_images">
+    <input type="file" id="imageInput" accept="image/*" style="display:none">
+  </div>
+  <div class="mb-3">
+    {% if post and index is defined %}
+    <!-- Tag Manager for Editing Posts -->
+    <label for="tag-container" class="form-label">Tags:</label>
+    <div id="tag-container" class="form-control" style="min-height: 40px; padding: 8px; margin-bottom: 8px;">
+        <!-- Tags will be displayed here -->
+    </div>
+    <div class="d-flex gap-2">
+        <input type="text" id="new-tag-input" class="form-control" placeholder="Enter new tag..." style="flex: 1;">
+        <button type="button" id="add-tag-btn" class="btn btn-secondary">Add Tag</button>
+    </div>
+    <small class="text-muted">Click × on any tag to remove it</small>
+    <input type="hidden" name="tag_management_mode" value="api">
+    {% else %}
+    <!-- Traditional Tags Input for New Posts -->
+    <label for="tags" class="form-label">Tags:</label>
+    <input type="text" class="form-control" name="tags" id="tags" placeholder="Tags (comma separated)" value="{{ post.tags|join(', ') if post }}">
+    <small class="text-muted">Separate multiple tags with commas (e.g., "tutorial, setup, beginner")</small>
+    {% endif %}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Attachments</label>
+    <input type="file" class="form-control" name="attachments" multiple>
+    {% if post and post.attachments %}
+    <ul class="mt-2">
+      {% for a in post.attachments %}
+      {% if not post.embedded or a not in post.embedded %}
+      <li><a href="/uploads/{{ a }}" target="_blank">{{ a }}</a></li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  <button type="submit" class="btn btn-primary">{{ 'Save' if post else 'Publish' }}</button>
+</form>
+
+<script>
+function format(cmd, value) {
+  document.execCommand(cmd, false, value);
+}
+
+document.querySelectorAll('[data-cmd]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    format(this.dataset.cmd);
+  });
+});
+
+function addLink() {
+  var url = prompt('Enter URL:');
+  if (url) {
+    format('createLink', url);
+  }
+}
+
+function insertHTML(html) {
+  document.execCommand('insertHTML', false, html);
+  saveContent();
+  autoGrow();
+}
+
+function insertSpacer() {
+  insertHTML('<hr>');
+}
+
+function insertGrid() {
+  var html = '<div class="row my-3"><div class="col">Left</div><div class="col">Right</div></div>';
+  insertHTML(html);
+}
+
+function insertCode() {
+  insertHTML('<pre><code contenteditable="true"></code></pre>');
+}
+
+function insertImage() {
+  document.getElementById('imageInput').click();
+}
+
+function pasteFromWord() {
+  alert('Copy an image from Word, then click OK and paste (Ctrl+V) in the editor below.');
+  // Focus the editor
+  document.getElementById('editor').focus();
+}
+
+function pasteWordDocument() {
+  var instructions = 'To paste a Word document with images:\n\n' +
+    '1. FIRST: Copy your text from Word (Ctrl+C)\n' +
+    '2. Paste it here (Ctrl+V) - text will appear\n' +
+    '3. THEN: Copy each image individually from Word\n' +
+    '4. Paste each image (Ctrl+V) where you want it\n\n' +
+    'This two-step process works around Word\'s clipboard limitations.\n\n' +
+    'Click OK to start, then paste your Word text.';
+  
+  alert(instructions);
+  document.getElementById('editor').focus();
+}
+
+document.getElementById('imageInput').addEventListener('change', function() {
+  if (!this.files.length) return;
+  var formData = new FormData();
+  formData.append('image', this.files[0]);
+  fetch('/upload-image', {method: 'POST', body: formData})
+    .then(r => {
+      if (!r.ok) {
+        return r.json().then(err => Promise.reject(err));
+      }
+      return r.json();
+    })
+    .then(data => {
+      if (data.success) {
+        insertHTML('<img src="' + data.url + '" class="img-fluid" draggable="true">');
+        var hidden = document.getElementById('embedded_images');
+        hidden.value += (hidden.value ? ',' : '') + data.filename;
+      } else {
+        console.error('Upload failed:', data.error);
+        alert('Image upload failed: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => {
+      console.error('Upload error:', err);
+      alert('Image upload failed: ' + (err.error || err.message || 'Unknown error'));
+    })
+    .finally(() => { this.value = ''; });
+});
+
+function saveContent() {
+  var editorContent = document.getElementById('editor').innerHTML;
+  var contentField = document.getElementById('content');
+  console.log('DEBUG: saveContent() called');
+  console.log('DEBUG: Editor content length:', editorContent.length);
+  console.log('DEBUG: Editor content preview:', editorContent.substring(0, 100));
+  contentField.value = editorContent;
+  console.log('DEBUG: Content field value set to length:', contentField.value.length);
+  return true;
+}
+
+function autoGrow() {
+  var editor = document.getElementById('editor');
+  var editorRect = editor.getBoundingClientRect();
+  var windowHeight = window.innerHeight;
+  
+  // Save current cursor position and scroll position
+  var selection = window.getSelection();
+  var range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+  var scrollTop = editor.scrollTop;
+  
+  // Calculate available space: window height minus editor's top position minus some margin
+  var availableHeight = windowHeight - editorRect.top - 150; // 150px for bottom margin/form elements
+  var minHeight = 200;
+  var maxHeight = Math.max(minHeight, availableHeight);
+  
+  // Reset height to calculate scroll height properly
+  var currentHeight = editor.offsetHeight;
+  editor.style.height = 'auto';
+  var contentHeight = editor.scrollHeight;
+  
+  var newHeight;
+  if (contentHeight <= maxHeight) {
+    // Content fits, grow the editor
+    newHeight = Math.max(minHeight, contentHeight);
+    editor.style.height = newHeight + 'px';
+    editor.style.overflowY = 'hidden';
+  } else {
+    // Content is too large, set max height and enable scrolling
+    newHeight = maxHeight;
+    editor.style.height = newHeight + 'px';
+    editor.style.overflowY = 'auto';
+  }
+  
+  // Restore cursor position
+  if (range) {
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+  
+  // Restore or adjust scroll position intelligently
+  if (editor.style.overflowY === 'auto') {
+    // If we're in scroll mode, maintain relative scroll position
+    var heightDiff = newHeight - currentHeight;
+    if (heightDiff !== 0 && scrollTop > 0) {
+      // Only adjust scroll if the height actually changed and we were scrolled
+      editor.scrollTop = Math.max(0, scrollTop);
+    } else {
+      editor.scrollTop = scrollTop;
+    }
+  } else {
+    // If we're not scrolling, ensure we're at the top
+    editor.scrollTop = 0;
+  }
+}
+
+// Throttle function to limit how often autoGrow is called
+function throttle(func, limit) {
+  var inThrottle;
+  return function() {
+    var args = arguments;
+    var context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(function() { inThrottle = false; }, limit);
+    }
+  };
+}
+
+var throttledAutoGrow = throttle(autoGrow, 100); // Limit to once per 100ms
+
+var editorEl = document.getElementById('editor');
+editorEl.addEventListener('input', function() {
+  saveContent();
+  throttledAutoGrow();
+});
+var obs = new MutationObserver(throttledAutoGrow);
+obs.observe(editorEl, {childList: true, subtree: true, characterData: true});
+
+// Add window resize listener to recalculate editor size
+window.addEventListener('resize', function() {
+  autoGrow(); // Don't throttle resize events
+});
+
+editorEl.addEventListener('paste', function(e){
+  console.log('=== PASTE EVENT DEBUG ===');
+  var clipboard = e.clipboardData || window.clipboardData;
+  var html = clipboard.getData('text/html');
+  var text = clipboard.getData('text/plain');
+  var items = clipboard.items || [];
+  var imageItems = [];
+  
+  // Debug information
+  console.log('Clipboard items count:', items.length);
+  console.log('HTML length:', html ? html.length : 0);
+  console.log('Text length:', text ? text.length : 0);
+  
+  // Try to get all available data types
+  var types = [];
+  try {
+    for (var i = 0; i < items.length; i++) {
+      types.push({
+        type: items[i].type,
+        kind: items[i].kind
+      });
+    }
+  } catch (e) {
+    console.log('Error getting clipboard types:', e);
+  }
+  console.log('Available clipboard types:', types);
+  
+  // Try alternative ways to get data
+  try {
+    var rtf = clipboard.getData('text/rtf');
+    console.log('RTF data length:', rtf ? rtf.length : 0);
+    if (rtf && rtf.length > 0) {
+      console.log('RTF content preview:', rtf.substring(0, 200));
+    }
+  } catch (e) {
+    console.log('No RTF data');
+  }
+  
+  // Try to get other data formats
+  var commonFormats = ['text/html', 'text/plain', 'text/rtf', 'image/png', 'image/jpeg', 'Files'];
+  commonFormats.forEach(function(format) {
+    try {
+      var data = clipboard.getData(format);
+      if (data && data.length > 0) {
+        console.log('Found data in format:', format, 'length:', data.length);
+      }
+    } catch (e) {
+      // Format not available
+    }
+  });
+  
+  // Log HTML content (truncated)
+  if (html) {
+    console.log('HTML content (first 1000 chars):', html.substring(0, 1000));
+    console.log('Contains img tags:', html.indexOf('<img') !== -1);
+    console.log('Contains v:imagedata:', html.indexOf('v:imagedata') !== -1);
+    console.log('Contains mso:', html.indexOf('mso-') !== -1);
+    console.log('Contains base64:', html.indexOf('base64') !== -1);
+    
+    // Look for any image-related content
+    var imgMatches = html.match(/<img[^>]*>/gi);
+    if (imgMatches) {
+      console.log('Found img tags:', imgMatches.length);
+      imgMatches.forEach(function(match, idx) {
+        console.log('Img tag', idx, ':', match);
+      });
+    }
+    
+    // Look for v:imagedata
+    var vimgMatches = html.match(/v:imagedata[^>]*>/gi);
+    if (vimgMatches) {
+      console.log('Found v:imagedata tags:', vimgMatches.length);
+      vimgMatches.forEach(function(match, idx) {
+        console.log('v:imagedata', idx, ':', match);
+      });
+    }
+    
+    // Look for base64 data
+    var base64Matches = html.match(/data:image\/[^;]+;base64,[A-Za-z0-9+\/=]{20,}/gi);
+    if (base64Matches) {
+      console.log('Found base64 images:', base64Matches.length);
+      base64Matches.forEach(function(match, idx) {
+        console.log('Base64 image', idx, 'length:', match.length);
+      });
+    }
+  }
+  
+  // Collect all image items from clipboard
+  for (var i=0; i<items.length; i++) {
+    console.log('Item', i, '- Type:', items[i].type, '- Kind:', items[i].kind);
+    if (items[i].kind === 'file' && items[i].type.indexOf('image') === 0) {
+      imageItems.push(items[i]);
+      console.log('Found direct image item:', items[i].type);
+    }
+  }
+  
+  console.log('Found', imageItems.length, 'direct image items');
+
+  // Enhanced detection for Word document images
+  var hasWordImages = html && (
+    html.indexOf('<img') !== -1 || 
+    html.indexOf('v:imagedata') !== -1 || 
+    html.indexOf('o:gfxdata') !== -1 ||
+    html.indexOf('WordDocument') !== -1 ||
+    html.indexOf('mso-') !== -1
+  );
+  
+  console.log('Has Word images detected:', hasWordImages);
+  console.log('=== END PASTE DEBUG ===');
+
+  if (hasWordImages || (html && html.indexOf('<img') !== -1)) {
+    e.preventDefault();
+    console.log('Processing Word/HTML images...');
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    
+    // Handle various Word document image formats
+    div.querySelectorAll('v\\:imagedata, v\\:shape').forEach(function(v){
+      console.log('Processing v:imagedata/v:shape element');
+      var img = document.createElement('img');
+      var src = v.getAttribute('src') || v.getAttribute('o:href') || '';
+      if (!src && v.querySelector('v\\:imagedata')) {
+        src = v.querySelector('v\\:imagedata').getAttribute('src') || '';
+      }
+      img.setAttribute('src', src);
+      img.className = 'img-fluid';
+      if (v.parentNode) {
+        v.parentNode.replaceChild(img, v);
+      }
+    });
+
+    // Handle Office graphics data
+    div.querySelectorAll('[o\\:gfxdata]').forEach(function(el){
+      console.log('Processing o:gfxdata element');
+      var gfxData = el.getAttribute('o:gfxdata');
+      if (gfxData) {
+        var img = document.createElement('img');
+        img.setAttribute('src', 'data:image/png;base64,' + gfxData);
+        img.className = 'img-fluid';
+        el.parentNode.replaceChild(img, el);
+      }
+    });
+
+    // Try to extract base64 data from style attributes or other places
+    div.querySelectorAll('*').forEach(function(el) {
+      var style = el.getAttribute('style') || '';
+      if (style.indexOf('base64') !== -1) {
+        console.log('Found base64 in style attribute');
+        var match = style.match(/data:image\/[^;]+;base64,([^"'\)]+)/);
+        if (match) {
+          var img = document.createElement('img');
+          img.setAttribute('src', 'data:image/png;base64,' + match[1]);
+          img.className = 'img-fluid';
+          el.parentNode.replaceChild(img, el);
+        }
+      }
+    });
+
+    var imgs = Array.from(div.querySelectorAll('img'));
+    var uploads = [];
+    var imageItemIndex = 0;
+    
+    console.log('Found', imgs.length, 'img elements to process');
+
+    imgs.forEach(function(img, imgIndex){
+      var src = img.getAttribute('src') || '';
+      console.log('Processing img', imgIndex, 'with src length:', src.length);
+      
+      function upload(blob, filename){
+        console.log('Uploading blob:', filename);
+        var fd = new FormData();
+        fd.append('image', blob, filename || ('pasted_' + Date.now() + '_' + imgIndex + '.png'));
+        uploads.push(
+          fetch('/upload-image', {method:'POST', body:fd})
+            .then(r => {
+              if (!r.ok) {
+                return r.json().then(err => Promise.reject(err));
+              }
+              return r.json();
+            })
+            .then(data => {
+              console.log('Upload successful:', data);
+              if (data.success) {
+                img.setAttribute('src', data.url);
+                img.className = 'img-fluid';
+                var hidden = document.getElementById('embedded_images');
+                hidden.value += (hidden.value ? ',' : '') + data.filename;
+              } else {
+                console.error('Upload failed:', data.error);
+                if (img.parentNode) img.parentNode.removeChild(img);
+              }
+            })
+            .catch(err => {
+              console.error('Image upload failed:', err);
+              // Show user-friendly error
+              if (err.error) {
+                console.warn('Upload error details:', err.error);
+              }
+              // Remove failed image
+              if (img.parentNode) img.parentNode.removeChild(img);
+            })
+        );
+      }
+
+      if (src.startsWith('data:image/')) {
+        console.log('Processing data URL image');
+        try {
+          var parts = src.split(',');
+          if (parts.length === 2) {
+            var bstr = atob(parts[1]);
+            var arr = new Uint8Array(bstr.length);
+            for (var j=0; j<bstr.length; j++) arr[j] = bstr.charCodeAt(j);
+            var mime = parts[0].split(':')[1].split(';')[0];
+            upload(new Blob([arr], {type:mime}), 'pasted_' + Date.now() + '_' + imgIndex + '.' + mime.split('/')[1]);
+          }
+        } catch(err) {
+          console.error('Failed to process data URL:', err);
+          if (img.parentNode) img.parentNode.removeChild(img);
+        }
+      } else if (src.startsWith('file://') || src.indexOf('word/media') !== -1 || (!src.startsWith('http') && src.length > 0)) {
+        console.log('Processing local/Word image, trying to match with clipboard items');
+        // Try to match with clipboard image items for local/Word images
+        if (imageItems[imageItemIndex]) {
+          console.log('Using clipboard image item', imageItemIndex);
+          upload(imageItems[imageItemIndex].getAsFile(), 'word_image_' + Date.now() + '_' + imgIndex + '.png');
+          imageItemIndex++;
+        } else {
+          // If no clipboard items available, try to get the image through other means
+          console.log('No clipboard item available for image with src:', src);
+          if (img.parentNode) img.parentNode.removeChild(img);
+        }
+      } else if (src.length === 0 && imageItems[imageItemIndex]) {
+        // Handle images with no src but clipboard items available
+        console.log('Using clipboard item for empty src image');
+        upload(imageItems[imageItemIndex].getAsFile(), 'word_image_' + Date.now() + '_' + imgIndex + '.png');
+        imageItemIndex++;
+      }
+      // Keep images with valid HTTP URLs as-is
+    });
+
+    Promise.all(uploads).then(function(){
+      // Clean up any remaining problematic elements while preserving content
+      div.querySelectorAll('o\\:*, v\\:*').forEach(function(el){
+        // Move children up before removing the element
+        while (el.firstChild) {
+          el.parentNode.insertBefore(el.firstChild, el);
+        }
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+      
+      // Clean up Word-specific attributes and classes
+      div.querySelectorAll('*').forEach(function(el) {
+        // Remove Word-specific classes
+        if (el.className) {
+          el.className = el.className.replace(/Mso\w+/g, '').replace(/\s+/g, ' ').trim();
+          if (!el.className) el.removeAttribute('class');
+        }
+        
+        // Clean up Word-specific styles but preserve basic formatting
+        if (el.style) {
+          var stylesToKeep = ['font-weight', 'font-style', 'text-decoration', 'color', 'background-color'];
+          var newStyle = '';
+          for (var i = 0; i < stylesToKeep.length; i++) {
+            var prop = stylesToKeep[i];
+            var value = el.style.getPropertyValue(prop);
+            if (value && value !== 'inherit' && value !== 'normal') {
+              newStyle += prop + ': ' + value + '; ';
+            }
+          }
+          if (newStyle) {
+            el.setAttribute('style', newStyle);
+          } else {
+            el.removeAttribute('style');
+          }
+        }
+        
+        // Remove Word-specific attributes
+        var attrsToRemove = ['o:gfxdata', 'v:shapes', 'o:spid', 'o:spt'];
+        for (var j = 0; j < attrsToRemove.length; j++) {
+          el.removeAttribute(attrsToRemove[j]);
+        }
+      });
+      
+      // Convert Word paragraphs to proper HTML
+      div.querySelectorAll('p').forEach(function(p) {
+        // Convert Word headings based on font size or class
+        var style = p.getAttribute('style') || '';
+        var className = p.getAttribute('class') || '';
+        
+        if (className.indexOf('Heading') !== -1 || style.indexOf('font-size') !== -1) {
+          var fontSize = 16; // default
+          var match = style.match(/font-size:\s*(\d+)/);
+          if (match) fontSize = parseInt(match[1]);
+          
+          var headingLevel = 'h3'; // default
+          if (fontSize > 20) headingLevel = 'h2';
+          if (fontSize > 24) headingLevel = 'h1';
+          if (fontSize < 18) headingLevel = 'h4';
+          
+          var heading = document.createElement(headingLevel);
+          heading.innerHTML = p.innerHTML;
+          if (p.style.fontWeight) heading.style.fontWeight = p.style.fontWeight;
+          if (p.style.color) heading.style.color = p.style.color;
+          p.parentNode.replaceChild(heading, p);
+        }
+      });
+      
+      // Process any remaining clipboard images that weren't matched to img tags
+      var remainingImages = [];
+      for (var k = imageItemIndex; k < imageItems.length; k++) {
+        remainingImages.push(imageItems[k]);
+      }
+      
+      if (remainingImages.length > 0) {
+        console.log('Processing', remainingImages.length, 'additional clipboard images');
+        var extraUploads = [];
+        remainingImages.forEach(function(item, index) {
+          var blob = item.getAsFile();
+          var fd = new FormData();
+          fd.append('image', blob, 'word_extra_' + Date.now() + '_' + index + '.png');
+          extraUploads.push(
+            fetch('/upload-image', {method:'POST', body:fd})
+              .then(r => {
+                if (!r.ok) {
+                  return r.json().then(err => Promise.reject(err));
+                }
+                return r.json();
+              })
+              .then(data => {
+                if (data.success) {
+                  // Insert additional images at the end of the content
+                  div.innerHTML += '<p><img src="' + data.url + '" class="img-fluid"></p>';
+                  var hidden = document.getElementById('embedded_images');
+                  hidden.value += (hidden.value ? ',' : '') + data.filename;
+                }
+              })
+              .catch(err => {
+                console.error('Extra image upload failed:', err);
+              })
+          );
+        });
+        
+        Promise.all(extraUploads).then(function() {
+          insertHTML(div.innerHTML);
+        });
+      } else {
+        insertHTML(div.innerHTML);
+      }
+    }).catch(function(err){
+      console.error('Some image uploads failed:', err);
+      // Still insert content, failed images will be removed
+      insertHTML(div.innerHTML);
+    });
+    
+    if (!uploads.length) {
+      // Clean up Office elements and Word formatting even if no uploads
+      div.querySelectorAll('o\\:*, v\\:*').forEach(function(el){
+        // Move children up before removing the element
+        while (el.firstChild) {
+          el.parentNode.insertBefore(el.firstChild, el);
+        }
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+      
+      // Clean up Word formatting
+      div.querySelectorAll('*').forEach(function(el) {
+        if (el.className) {
+          el.className = el.className.replace(/Mso\w+/g, '').replace(/\s+/g, ' ').trim();
+          if (!el.className) el.removeAttribute('class');
+        }
+        if (el.style) {
+          var stylesToKeep = ['font-weight', 'font-style', 'text-decoration', 'color'];
+          var newStyle = '';
+          for (var i = 0; i < stylesToKeep.length; i++) {
+            var prop = stylesToKeep[i];
+            var value = el.style.getPropertyValue(prop);
+            if (value && value !== 'inherit' && value !== 'normal') {
+              newStyle += prop + ': ' + value + '; ';
+            }
+          }
+          if (newStyle) {
+            el.setAttribute('style', newStyle);
+          } else {
+            el.removeAttribute('style');
+          }
+        }
+      });
+      
+      insertHTML(div.innerHTML);
+    }
+    return;
+  }
+
+  // Enhanced detection for Word content without images
+  if (html && (html.indexOf('mso-') !== -1 || html.indexOf('WordDocument') !== -1)) {
+    e.preventDefault();
+    console.log('Processing Word text content without images...');
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    
+    // Clean up Word-specific elements and formatting
+    div.querySelectorAll('o\\:*, v\\:*').forEach(function(el){
+      while (el.firstChild) {
+        el.parentNode.insertBefore(el.firstChild, el);
+      }
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    
+    // Clean up Word formatting but preserve basic structure
+    div.querySelectorAll('*').forEach(function(el) {
+      if (el.className) {
+        el.className = el.className.replace(/Mso\w+/g, '').replace(/\s+/g, ' ').trim();
+        if (!el.className) el.removeAttribute('class');
+      }
+      if (el.style) {
+        var stylesToKeep = ['font-weight', 'font-style', 'text-decoration', 'color'];
+        var newStyle = '';
+        for (var i = 0; i < stylesToKeep.length; i++) {
+          var prop = stylesToKeep[i];
+          var value = el.style.getPropertyValue(prop);
+          if (value && value !== 'inherit' && value !== 'normal') {
+            newStyle += prop + ': ' + value + '; ';
+          }
+        }
+        if (newStyle) {
+          el.setAttribute('style', newStyle);
+        } else {
+          el.removeAttribute('style');
+        }
+      }
+    });
+    
+    // Convert Word headings
+    div.querySelectorAll('p').forEach(function(p) {
+      var style = p.getAttribute('style') || '';
+      var className = p.getAttribute('class') || '';
+      
+      if (className.indexOf('Heading') !== -1 || style.indexOf('font-size') !== -1) {
+        var fontSize = 16;
+        var match = style.match(/font-size:\s*(\d+)/);
+        if (match) fontSize = parseInt(match[1]);
+        
+        var headingLevel = 'h3';
+        if (fontSize > 20) headingLevel = 'h2';
+        if (fontSize > 24) headingLevel = 'h1';
+        if (fontSize < 18) headingLevel = 'h4';
+        
+        var heading = document.createElement(headingLevel);
+        heading.innerHTML = p.innerHTML;
+        if (p.style.fontWeight) heading.style.fontWeight = p.style.fontWeight;
+        if (p.style.color) heading.style.color = p.style.color;
+        p.parentNode.replaceChild(heading, p);
+      }
+    });
+    
+    insertHTML(div.innerHTML);
+    return;
+  }
+
+  // Handle direct image paste (non-HTML) OR fallback for Word images
+  if (imageItems.length && !hasWordImages) {
+    e.preventDefault();
+    console.log('Processing direct image items...');
+    imageItems.forEach(function(item, index){
+      console.log('Processing image item', index, 'type:', item.type);
+      var blob = item.getAsFile();
+      var fd = new FormData();
+      fd.append('image', blob, 'pasted_' + Date.now() + '_' + index + '.png');
+      fetch('/upload-image', {method:'POST', body:fd})
+        .then(r => {
+          if (!r.ok) {
+            return r.json().then(err => Promise.reject(err));
+          }
+          return r.json();
+        })
+        .then(data => {
+          console.log('Direct image upload successful:', data);
+          if (data.success) {
+            insertHTML('<img src="' + data.url + '" class="img-fluid" draggable="true">');
+            var hidden = document.getElementById('embedded_images');
+            hidden.value += (hidden.value ? ',' : '') + data.filename;
+          } else {
+            console.error('Direct image upload failed:', data.error);
+          }
+        })
+        .catch(err => {
+          console.error('Direct image upload failed:', err);
+        });
+    });
+  }
+  
+  // Special handling for cases where we have both HTML and images (common with Word)
+  if (imageItems.length && hasWordImages && imgs.length === 0) {
+    console.log('Word document detected but no img tags found, trying direct image upload...');
+    e.preventDefault();
+    imageItems.forEach(function(item, index){
+      console.log('Processing Word clipboard image item', index);
+      var blob = item.getAsFile();
+      var fd = new FormData();
+      fd.append('image', blob, 'word_direct_' + Date.now() + '_' + index + '.png');
+      fetch('/upload-image', {method:'POST', body:fd})
+        .then(r => {
+          if (!r.ok) {
+            return r.json().then(err => Promise.reject(err));
+          }
+          return r.json();
+        })
+        .then(data => {
+          if (data.success) {
+            insertHTML('<img src="' + data.url + '" class="img-fluid" draggable="true">');
+            var hidden = document.getElementById('embedded_images');
+            hidden.value += (hidden.value ? ',' : '') + data.filename;
+          }
+        })
+        .catch(err => {
+          console.error('Word direct image upload failed:', err);
+        });
+    });
+  }
+  
+  // Fallback: if we have Word HTML but no images found, try to process any clipboard images anyway
+  if (hasWordImages && imageItems.length > 0 && imgs.length === 0) {
+    console.log('Word content detected with clipboard images, processing as fallback...');
+    e.preventDefault();
+    
+    // First insert the text content
+    if (html) {
+      var div = document.createElement('div');
+      div.innerHTML = html;
+      
+      // Clean up Word elements
+      div.querySelectorAll('o\\:*, v\\:*').forEach(function(el){
+        while (el.firstChild) {
+          el.parentNode.insertBefore(el.firstChild, el);
+        }
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+      
+      insertHTML(div.innerHTML);
+    }
+    
+    // Then process images separately
+    imageItems.forEach(function(item, index){
+      console.log('Processing fallback image', index);
+      var blob = item.getAsFile();
+      var fd = new FormData();
+      fd.append('image', blob, 'word_fallback_' + Date.now() + '_' + index + '.png');
+      fetch('/upload-image', {method:'POST', body:fd})
+        .then(r => {
+          if (!r.ok) {
+            return r.json().then(err => Promise.reject(err));
+          }
+          return r.json();
+        })
+        .then(data => {
+          if (data.success) {
+            insertHTML('<p><img src="' + data.url + '" class="img-fluid" draggable="true"></p>');
+            var hidden = document.getElementById('embedded_images');
+            hidden.value += (hidden.value ? ',' : '') + data.filename;
+          }
+        })
+        .catch(err => {
+          console.error('Fallback image upload failed:', err);
+        });
+    });
+    return;
+  }
+});
+
+var draggedImg = null;
+editorEl.addEventListener('dragstart', function(e){
+  if (e.target.tagName === 'IMG') {
+    draggedImg = e.target;
+  }
+});
+editorEl.addEventListener('dragover', function(e){
+  if (draggedImg) e.preventDefault();
+});
+editorEl.addEventListener('drop', function(e){
+  if (!draggedImg) return;
+  e.preventDefault();
+  var range = document.caretRangeFromPoint(e.clientX, e.clientY);
+  if (range) {
+    draggedImg.parentNode.removeChild(draggedImg);
+    range.insertNode(draggedImg);
+  }
+  draggedImg = null;
+  saveContent();
+  autoGrow();
+});
+
+// Add drag and drop support for external image files
+editorEl.addEventListener('dragover', function(e) {
+  if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+    for (var i = 0; i < e.dataTransfer.items.length; i++) {
+      if (e.dataTransfer.items[i].kind === 'file' && 
+          e.dataTransfer.items[i].type.indexOf('image') === 0) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        editorEl.style.backgroundColor = '#f8f9fa';
+        break;
+      }
+    }
+  }
+});
+
+editorEl.addEventListener('dragleave', function(e) {
+  editorEl.style.backgroundColor = '';
+});
+
+editorEl.addEventListener('drop', function(e) {
+  editorEl.style.backgroundColor = '';
+  
+  // Handle internal image dragging first
+  if (draggedImg) {
+    e.preventDefault();
+    var range = document.caretRangeFromPoint(e.clientX, e.clientY);
+    if (range) {
+      draggedImg.parentNode.removeChild(draggedImg);
+      range.insertNode(draggedImg);
+    }
+    draggedImg = null;
+    saveContent();
+    autoGrow();
+    return;
+  }
+  
+  // Handle external file drops
+  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    e.preventDefault();
+    console.log('Files dropped:', e.dataTransfer.files.length);
+    
+    for (var i = 0; i < e.dataTransfer.files.length; i++) {
+      var file = e.dataTransfer.files[i];
+      if (file.type.indexOf('image') === 0) {
+        console.log('Processing dropped image:', file.name, file.type);
+        var fd = new FormData();
+        fd.append('image', file);
+        
+        fetch('/upload-image', {method: 'POST', body: fd})
+          .then(r => {
+            if (!r.ok) {
+              return r.json().then(err => Promise.reject(err));
+            }
+            return r.json();
+          })
+          .then(data => {
+            if (data.success) {
+              // Insert image at cursor position
+              var range = document.caretRangeFromPoint(e.clientX, e.clientY);
+              if (range) {
+                var img = document.createElement('img');
+                img.src = data.url;
+                img.className = 'img-fluid';
+                img.draggable = true;
+                range.insertNode(img);
+                
+                var hidden = document.getElementById('embedded_images');
+                hidden.value += (hidden.value ? ',' : '') + data.filename;
+                saveContent();
+                autoGrow();
+              }
+            } else {
+              alert('Failed to upload image: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Drop upload failed:', err);
+            alert('Failed to upload image: ' + (err.error || err.message || 'Unknown error'));
+          });
+      }
+    }
+  }
+});
+
+autoGrow();
+saveContent();
+</script>
+
+{% if post and index is defined %}
+<script>
+// Use data attribute to pass the index safely
+document.addEventListener('DOMContentLoaded', function() {
+    var tagContainer = document.getElementById('tag-container');
+    if (tagContainer) {
+        tagContainer.setAttribute('data-post-index', '{{ index }}');
+    }
+});
+</script>
+<script src="/tag-manager-js"></script>
+<script>
+// Initialize Tag Manager for editing posts
+document.addEventListener('DOMContentLoaded', function() {
+    var tagContainer = document.getElementById('tag-container');
+    if (typeof initTagManager === 'function' && tagContainer) {
+        var postIndex = parseInt(tagContainer.getAttribute('data-post-index'));
+        if (!isNaN(postIndex)) {
+            initTagManager(postIndex);
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

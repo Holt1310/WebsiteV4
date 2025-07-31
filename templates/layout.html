@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tech Guides</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">Tech Guides</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/howto">Posts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/">Resources</a>
+            </li>
+            {% if session.get('logged_in') %}
+            <li class="nav-item">
+              <a class="nav-link" href="/new">New Post</a>
+            </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/categories">Categories</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/resources-admin">Resource CFG</a>
+              </li>
+            {% if session.get('secret_admin') %}
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/external-tools">External Tools CFG</a>
+            </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/admin/data-tables">Data Tables</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/manage-admins">Admin CFG</a>
+              </li>
+            {% endif %}
+            <li class="nav-item">
+              <a class="nav-link" href="/account"><i class="bi bi-person-circle"></i> My Account</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Logout</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="/login">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/register">Register</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+
+    {% if session.get('logged_in') %}
+    <!-- Chat System Styles -->
+    <style>
+    .chat-toolbar {
+      position: fixed;
+      bottom: 100px; /* Position above the chat button */
+      left: 20px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      z-index: 1100; /* Higher than annotation system */
+      width: 350px;
+      max-height: 500px;
+      display: none;
+      overflow: hidden;
+    }
+
+    /* External Tools Styles */
+    .external-tools-toolbar {
+      position: fixed;
+      bottom: 180px; /* Position above the chat toolbar */
+      left: 20px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      z-index: 1100;
+      width: 350px;
+      max-height: 400px;
+      display: none;
+      overflow: hidden;
+    }
+
+    .external-tools-toggle-btn {
+      position: fixed;
+      bottom: 100px; /* Position above chat button */
+      left: 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1099;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+    }
+
+    .external-tools-toggle-btn:hover {
+      background: #218838;
+      transform: scale(1.1);
+    }
+
+    .external-tools-toggle-btn.active {
+      background: #dc3545;
+    }
+
+    .external-tools-toolbar.show {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-toolbar.show {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .external-tools-header {
+      background: #28a745;
+      color: white;
+      padding: 15px;
+      border-radius: 15px 15px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .external-tools-content {
+      flex: 1;
+      padding: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .external-tool-item {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .external-tool-item:hover {
+      background: #f8f9fa;
+      border-color: #007bff;
+    }
+
+    .external-tool-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .tool-icon {
+      font-size: 1.5em;
+      margin-right: 10px;
+      color: #28a745;
+      flex-shrink: 0;
+    }
+
+    .tool-info {
+      flex: 1;
+    }
+
+    .tool-name {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .tool-desc {
+      font-size: 0.9em;
+      color: #666;
+      margin: 0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+      .chat-toolbar, .external-tools-toolbar {
+        width: calc(100vw - 40px);
+        left: 20px;
+        right: 20px;
+      }
+      
+      .chat-toggle-btn, .external-tools-toggle-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+      }
+    }
+
+    .chat-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px; /* Position on left side to avoid conflicts */
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1099; /* Just below toolbar */
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-toggle-btn:hover {
+      background: #0056b3;
+      transform: scale(1.1);
+    }
+
+    .chat-toggle-btn.active {
+      background: #dc3545;
+    }
+
+    .chat-toggle-btn.has-new-messages {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+    }
+
+    .chat-header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      border-radius: 15px 15px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+      background: #f8f9fa;
+    }
+
+    .chat-message {
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 10px;
+      border-left: 3px solid #007bff;
+    }
+
+    .chat-message.own-message {
+      background: #e3f2fd;
+      border-left-color: #2196f3;
+      margin-left: 20px;
+    }
+
+    .chat-form {
+      padding: 15px;
+      border-top: 1px solid #dee2e6;
+      background: white;
+      border-radius: 0 0 15px 15px;
+    }
+
+    .chat-notification {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 1101; /* Highest priority */
+      display: none;
+    }
+
+    /* Client Tools Menu Styles - REMOVED */
+
+    /* Client Service Notification Styles */
+    .client-service-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ffffff;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1100;
+      max-width: 400px;
+      display: none;
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    .notification-content {
+      padding: 0;
+    }
+
+    .notification-header {
+      background: #007bff;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .notification-header i {
+      margin-right: 8px;
+      font-size: 1.1em;
+    }
+
+    .notification-header .btn-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.2em;
+      cursor: pointer;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notification-header .btn-close:before {
+      content: "×";
+    }
+
+    .notification-body {
+      padding: 16px;
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+
+    .notification-body p {
+      margin: 0 0 8px 0;
+    }
+
+    .notification-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .notification-actions {
+      padding: 12px 16px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .notification-actions .btn {
+      font-size: 0.85em;
+      padding: 6px 12px;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    </style>
+
+    <!-- External Tools Toggle Button (conditionally shown) -->
+    <button id="externalToolsToggleBtn" class="external-tools-toggle-btn" onclick="toggleExternalToolsToolbar()">
+      <i class="bi bi-tools"></i>
+    </button>
+
+    <!-- External Tools Toolbar -->
+    <div id="externalToolsToolbar" class="external-tools-toolbar">
+      <div class="external-tools-header">
+        <h6 class="mb-0">External Tools</h6>
+        <button class="btn btn-sm text-white" onclick="toggleExternalToolsToolbar()" style="background: none; border: none;">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="external-tools-content" id="externalToolsContent">
+        <div class="text-center text-muted">
+          <i class="bi bi-tools" style="font-size: 2em;"></i>
+          <p>Loading tools...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button id="chatToggleBtn" class="chat-toggle-btn" onclick="toggleChatToolbar()">
+      <i class="bi bi-chat-dots"></i>
+    </button>
+
+    <!-- Chat Notification -->
+    <div id="chatNotification" class="chat-notification">
+      New message received!
+    </div>
+
+    <!-- Chat Toolbar -->
+    <div id="chatToolbar" class="chat-toolbar">
+      <div class="chat-header">
+        <h6 class="mb-0">Admin Chat</h6>
+        <button class="btn btn-sm text-white" onclick="toggleChatToolbar()" style="background: none; border: none;">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="chat-messages" id="chatMessages">
+        <!-- Messages will be loaded here -->
+      </div>
+      
+      <div class="chat-form">
+        <form id="chatForm" enctype="multipart/form-data">
+          <div class="mb-2">
+            <input type="text" class="form-control form-control-sm" name="text" placeholder="Type a message...">
+          </div>
+          <div class="mb-2">
+            <input type="file" class="form-control form-control-sm" name="image" accept="image/*">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Chat JavaScript -->
+    <script>
+    let lastMessageCount = 0;
+    let chatVisible = false;
+
+    // Chat functions
+    function toggleChatToolbar() {
+      const toolbar = document.getElementById('chatToolbar');
+      const toggleBtn = document.getElementById('chatToggleBtn');
+      
+      if (toolbar.classList.contains('show')) {
+        toolbar.classList.remove('show');
+        toggleBtn.classList.remove('active');
+        chatVisible = false;
+      } else {
+        toolbar.classList.add('show');
+        toggleBtn.classList.add('active');
+        chatVisible = true;
+        // Remove new message indicator when opening
+        toggleBtn.classList.remove('has-new-messages');
+        fetchChats();
+      }
+    }
+
+    async function fetchChats() {
+      try {
+        const res = await fetch('/chat-data');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const messagesContainer = document.getElementById('chatMessages');
+        const currentUser = '{{ session.get("username", "Anonymous") }}';
+        
+        messagesContainer.innerHTML = data.messages.map(m => {
+          const isOwnMessage = m.name === currentUser;
+          const messageClass = isOwnMessage ? 'chat-message own-message' : 'chat-message';
+          
+          return `
+            <div class="${messageClass}">
+              <strong>${m.name}</strong>
+              ${m.text ? `<div>${m.text}</div>` : ''}
+              ${m.image ? `<div class="mt-1"><img src="/uploads/${m.image}" class="img-fluid" style="max-width:150px; border-radius: 5px;"></div>` : ''}
+              <small class="text-muted d-block mt-1">${m.created}</small>
+            </div>`;
+        }).join('');
+        
+        // Check for new messages
+        if (data.messages.length > lastMessageCount && lastMessageCount > 0 && !chatVisible) {
+          showNewMessageNotification();
+        }
+        lastMessageCount = data.messages.length;
+        
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      } catch (error) {
+        console.error('Error fetching chat messages:', error);
+      }
+    }
+
+    function showNewMessageNotification() {
+      const toggleBtn = document.getElementById('chatToggleBtn');
+      const notification = document.getElementById('chatNotification');
+      
+      // Add pulse animation to button
+      toggleBtn.classList.add('has-new-messages');
+      
+      // Show notification briefly
+      notification.style.display = 'block';
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 3000);
+    }
+
+    // Handle form submission
+    document.getElementById('chatForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const textInput = formData.get('text');
+      const imageInput = formData.get('image');
+      
+      // Validate that at least text or image is provided
+      if (!textInput.trim() && (!imageInput || imageInput.size === 0)) {
+        alert('Please enter a message or select an image to send.');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          this.reset(); // Clear form
+          fetchChats(); // Refresh messages
+        } else {
+          console.error('Failed to send message:', response.status);
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    });
+
+    // Initialize chat system
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchChats(); // Load initial messages
+      setInterval(fetchChats, 3000); // Poll for new messages every 3 seconds
+    });
+
+    // Close chat when clicking outside
+    document.addEventListener('click', function(e) {
+      const chatToolbar = document.getElementById('chatToolbar');
+      const chatToggleBtn = document.getElementById('chatToggleBtn');
+      const externalToolsToolbar = document.getElementById('externalToolsToolbar');
+      const externalToolsToggleBtn = document.getElementById('externalToolsToggleBtn');
+      
+      if (!e.target.closest('#chatToolbar') && 
+          !e.target.closest('#chatToggleBtn') && 
+          chatToolbar.classList.contains('show')) {
+        toggleChatToolbar();
+      }
+      
+      if (!e.target.closest('#externalToolsToolbar') && 
+          !e.target.closest('#externalToolsToggleBtn') && 
+          externalToolsToolbar.classList.contains('show')) {
+        toggleExternalToolsToolbar();
+      }
+    });
+
+    // External Tools Functions
+    let externalToolsVisible = false;
+
+    function toggleExternalToolsToolbar() {
+      const toolbar = document.getElementById('externalToolsToolbar');
+      const toggleBtn = document.getElementById('externalToolsToggleBtn');
+      
+      if (toolbar.classList.contains('show')) {
+        toolbar.classList.remove('show');
+        toggleBtn.classList.remove('active');
+        externalToolsVisible = false;
+      } else {
+        toolbar.classList.add('show');
+        toggleBtn.classList.add('active');
+        externalToolsVisible = true;
+        loadExternalTools();
+      }
+    }
+
+    async function loadExternalTools() {
+      try {
+        const response = await fetch('/api/external-tools');
+        const data = await response.json();
+        
+        const content = document.getElementById('externalToolsContent');
+        
+        if (data.hasAccess && data.tools && data.tools.length > 0) {
+          content.innerHTML = data.tools.map(tool => `
+            <div class="external-tool-item" onclick="runExternalTool('${tool.id}')">
+              <i class="tool-icon ${tool.icon}"></i>
+              <div class="tool-info">
+                <div class="tool-name">${tool.name}</div>
+                <div class="tool-desc">${tool.description}</div>
+              </div>
+            </div>
+          `).join('');
+        } else if (!data.hasAccess) {
+          content.innerHTML = `
+            <div class="text-center text-muted">
+              <i class="bi bi-lock" style="font-size: 2em;"></i>
+              <p>External tools not enabled</p>
+              <small>Enable in <a href="/account">Account Settings</a></small>
+            </div>
+          `;
+        } else {
+          content.innerHTML = `
+            <div class="text-center text-muted">
+              <i class="bi bi-tools" style="font-size: 2em;"></i>
+              <p>No tools available</p>
+              <small>Tools will appear here when configured</small>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading external tools:', error);
+        document.getElementById('externalToolsContent').innerHTML = `
+          <div class="text-center text-danger">
+            <i class="bi bi-exclamation-triangle" style="font-size: 2em;"></i>
+            <p>Error loading tools</p>
+          </div>
+        `;
+      }
+    }
+
+    async function runExternalTool(toolId) {
+      try {
+        const response = await fetch('/api/external-tools/run', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ toolId: toolId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          if (result.action === 'protocol') {
+            // Handle protocol URLs (like techguides://)
+            window.location.href = result.url;
+          } else if (result.action === 'client_service') {
+            // Handle client service communication
+            if (result.task_id) {
+              // Task was already added to queue by the server
+              showClientServiceNotification(result.tool_id, result.task_id);
+            } else {
+              // Need to add task to queue manually
+              await handleClientServiceRequest(result.tool_id);
+            }
+          } else if (result.action === 'execute') {
+            // For direct executables, show installation guide
+            showClientServiceGuide(result.executable);
+          }
+          
+          console.log('Tool executed successfully:', result.message);
+        } else {
+          console.error('Tool execution failed:', result.error);
+          alert('Tool execution failed: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error running external tool:', error);
+        alert('Error running tool: ' + error.message);
+      }
+    }
+
+    async function handleClientServiceRequest(toolId) {
+      try {
+        // Add task to client service queue
+        const response = await fetch('/api/client-service/queue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            action: 'add',
+            tool_id: toolId 
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Show notification that client service is needed
+          showClientServiceNotification(toolId, result.task_id);
+        } else {
+          alert('Error queuing tool request: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error handling client service request:', error);
+        alert('Error communicating with client service: ' + error.message);
+      }
+    }
+
+    function showClientServiceNotification(toolId, taskId) {
+      // Create or update notification
+      let notification = document.getElementById('clientServiceNotification');
+      if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'clientServiceNotification';
+        notification.className = 'client-service-notification';
+        document.body.appendChild(notification);
+      }
+      
+      notification.innerHTML = `
+        <div class="notification-content">
+          <div class="notification-header">
+            <i class="bi bi-shield-check"></i>
+            <strong>TechGuides Client Service Required</strong>
+            <button class="btn-close" onclick="hideClientServiceNotification()"></button>
+          </div>
+          <div class="notification-body">
+            <p>A tool execution request has been queued for the client service.</p>
+            <p><strong>Tool ID:</strong> ${toolId}</p>
+            <p>Make sure the TechGuides Client Service is running and connected to process this request.</p>
+          </div>
+          <div class="notification-actions">
+            <button class="btn btn-primary btn-sm" onclick="downloadClientService()">
+              <i class="bi bi-download"></i> Download Client Service
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="hideClientServiceNotification()">
+              Close
+            </button>
+          </div>
+        </div>
+      `;
+      
+      notification.style.display = 'block';
+      
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        hideClientServiceNotification();
+      }, 10000);
+    }
+
+    function showClientServiceGuide(executable) {
+      // Show modal with client service installation guide
+      const modal = document.createElement('div');
+      modal.className = 'modal fade';
+      modal.id = 'clientServiceModal';
+      modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                <i class="bi bi-shield-check"></i> 
+                Client Service Required
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Security Notice:</strong> Modern browsers prevent direct execution of system programs for security reasons.
+              </div>
+              
+              <h6>To run external tools like "${executable}", you need the TechGuides Client Service:</h6>
+              
+              <ol class="mt-3">
+                <li><strong>Download</strong> the TechGuides Client Service</li>
+                <li><strong>Install and run</strong> the client service on your computer</li>
+                <li><strong>Configure</strong> it with this server's details:
+                  <ul>
+                    <li>Server URL: <code>${window.location.origin}</code></li>
+                    <li>Your username and password</li>
+                  </ul>
+                </li>
+                <li><strong>Connect</strong> the client service to enable secure tool execution</li>
+              </ol>
+              
+              <div class="alert alert-warning mt-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Note:</strong> The client service runs on your local machine and provides secure, authenticated access to system tools.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" onclick="downloadClientService()">
+                <i class="bi bi-download"></i> Download Client Service
+              </button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+      
+      // Clean up when modal is hidden
+      modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+      });
+    }
+
+    function hideClientServiceNotification() {
+      const notification = document.getElementById('clientServiceNotification');
+      if (notification) {
+        notification.style.display = 'none';
+      }
+    }
+
+    function downloadClientService() {
+      // Trigger download of client service
+      const link = document.createElement('a');
+      link.href = '/client_tools/techguides_client_service.py';
+      link.download = 'techguides_client_service.py';
+      link.click();
+      
+      // Also provide setup instructions
+      alert('Client service download started. Make sure you have Python installed, then run the downloaded file.');
+    }
+
+    // Check if user has external tools access and show/hide button
+    async function checkExternalToolsAccess() {
+      try {
+        const response = await fetch('/check-external-features');
+        const data = await response.json();
+        
+        const button = document.getElementById('externalToolsToggleBtn');
+        
+        if (data.has_external_features) {
+          button.style.display = 'flex';
+          // External tools enabled
+        } else {
+          button.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error checking external tools access:', error);
+        // Hide button on error
+        document.getElementById('externalToolsToggleBtn').style.display = 'none';
+      }
+    }
+
+    // Initialize external tools on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      checkExternalToolsAccess();
+    });
+    </script>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
