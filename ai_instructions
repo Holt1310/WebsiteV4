@@ -1,0 +1,165 @@
+# TechGuides Flask Application - AI Coding Guidelines
+
+## Architecture Overview
+
+This is a Flask-based technical documentation and forum system with a **hybrid data architecture**:
+- **JSON files** for content data (posts, resources, categories, chat) 
+- **SQLite database** for user management and custom data tables
+- **File uploads** in `/uploads` directory
+- **Client-server external tools** via WebSockets/polling
+
+**Critical Rule**: Never use `enhanced_database.db` - it's legacy. Case templates and data tables must use JSON files only. The main `database.db` is only for users and metadata.
+
+## Data Architecture Patterns
+
+### JSON-Based Content Storage
+```python
+# Load/save pattern used throughout
+def load_posts():
+    if not os.path.exists(POSTS_PATH):
+        return []
+    with open(POSTS_PATH, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def save_posts(posts):
+    with open(POSTS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(posts, f, indent=2, ensure_ascii=False)
+```
+
+### Key Data Files
+- `posts.json` - Forum posts with embedded images, tags, categories
+- `resources.json` - Resource links with dynamic placeholders (`<DYNAMIC>`)
+- `categories.json` - Simple category list
+- `chat.json` - Chat messages (cleared on startup)
+- `external_tools_config.json` - Tool configurations
+
+### Database vs JSON Decision Matrix
+- **Use SQLite**: User accounts, authentication, metadata tables
+- **Use JSON**: All content, posts, resources, categories, tool configs
+
+## Development Workflows
+
+### Running the Application
+```bash
+python app.py  # Starts on localhost:5000
+# Environment variables: TRUCKSOFT_ADMIN_PASSWORD, TRUCKSOFT_HOST, TRUCKSOFT_PORT
+```
+
+### Client Service Architecture
+External tools require a separate Python client service (`client_tools/techguides_client_service.py`) that:
+- Runs as a local desktop app with system tray
+- Polls server for tool execution requests  
+- Provides secure bridge between web UI and system executables
+
+### Key File Patterns
+- `app.py` - Main Flask app (2000+ lines, handles all routes)
+- `account_routes.py` - User account management (Blueprint pattern)
+- `database_init.py` - Database schema setup
+- `db_utils.py` - Database operations with context managers
+- `templates/layout.html` - Base template with floating chat/tools UI
+
+## Frontend Architecture
+
+### Bootstrap + Vanilla JS
+- Bootstrap 5.3.0 for UI components
+- Custom floating toolbars (chat, external tools) with position-fixed CSS
+- Rich text editor built with `contenteditable` and `document.execCommand`
+- Image drag-drop, Word paste cleanup, real-time auto-grow
+
+### Template Inheritance
+```html
+{% extends 'layout.html' %}
+{% block content %}...{% endblock %}
+```
+
+### Key UI Patterns
+- **Category tabs** with client-side filtering + server-side pagination
+- **Dynamic resource forms** with type-dependent field visibility
+- **Floating chat system** with real-time polling every 3 seconds
+- **External tools integration** with client service requirement detection
+
+## Content Management Patterns
+
+### Post Editor Features
+- Rich text with toolbar (bold, italic, lists, links, images, code blocks)
+- Image embedding with drag-drop and clipboard paste
+- Word document cleanup (removes MSO tags, normalizes styles)
+- Tag system with comma-separated input and filter checkboxes
+
+### Resource Types
+- `download` - Files in uploads folder
+- `website` - External URLs
+- `dynamic` - URLs with `<DYNAMIC>` placeholder for user input
+- `file_explorer` - Local file system paths (Windows-specific)
+
+### Image Handling
+```python
+# Timestamped filenames prevent conflicts
+name = datetime.utcnow().strftime('%Y%m%d%H%M%S_') + secure_filename(f.filename)
+```
+
+## Security & Authentication
+
+### Session-Based Auth
+- Uses Flask sessions with `logged_in` and `secret_admin` flags
+- Password hashing via Werkzeug
+- Login decorator: `@login_required`
+
+### File Upload Security
+```python
+ALLOWED_ATTACH_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'txt', 'doc', 'docx', 'zip', 'rar', '7z'}
+```
+
+## Common Patterns & Conventions
+
+### Error Handling
+```python
+try:
+    with get_db_connection() as conn:
+        # database operations
+        conn.commit()
+        return True, "Success message"
+except Exception as e:
+    print(f"Error: {e}")
+    return False, f"Error message: {str(e)}"
+```
+
+### Flash Messages
+```python
+flash('Success message', 'success')  # or 'error'
+```
+
+### Form Processing
+Most forms use action-based routing:
+```html
+<input type="hidden" name="action" value="add">
+```
+
+### Chat System Cleanup
+Application clears `chat.json` and removes chat images on startup - this is intentional for fresh sessions.
+
+## External Dependencies
+
+### Required Packages
+- Flask (minimal requirements.txt - only Flask listed)
+- Werkzeug (for security utilities)
+- Standard library: json, os, glob, datetime, re
+
+### Frontend CDN Dependencies
+- Bootstrap 5.3.0
+- Bootstrap Icons 1.7.2
+
+## Integration Points
+
+### Client Service Communication
+- Server exposes `/api/external-tools` endpoint
+- Client polls via background thread
+- Authentication via session tokens
+- Tool execution requires local client service running
+
+### Upload File Management
+- Files saved to `/uploads` with timestamp prefixes
+- Embedded images tracked in post metadata to prevent duplication in attachments
+- Chat images automatically cleaned up on startup
+
+When modifying this codebase, always respect the JSON-first architecture for content and maintain the clear separation between content storage (JSON) and user management (SQLite).
